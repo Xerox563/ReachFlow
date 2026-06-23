@@ -14,9 +14,9 @@ export interface ReferencePost {
 }
 
 export interface PostVariation {
-  id: string;
-  type: 'Story' | 'Professional' | 'Engaging';
-  content: string;
+  story: string;
+  professional: string;
+  engaging: string;
 }
 
 export interface GeneratedPost {
@@ -26,8 +26,21 @@ export interface GeneratedPost {
   audience: string;
   selectedStyleId: string;
   content: string;
-  variations: PostVariation[];
   hookOptions: string[];
   selectedHook?: string;
+  variations?: PostVariation;
+  createdAt: string;
+}
+
+export interface SavedPost {
+  id: string;
+  topic: string;
+  keyPoints: string[];
+  audience: string;
+  selectedStyle: ReferencePost;
+  content: string;
+  hookOptions: string[];
+  selectedHook?: string;
+  variations?: PostVariation;
   createdAt: string;
 }

@@ -1,25 +1,41 @@
 import { NextResponse } from 'next/server';
-import { generateLinkedInPost } from '@/lib/ai';
+import { 
+  generateLinkedInPost, 
+  generateHooks, 
+  generateVariations, 
+  editPost,
+  generateComment
+} from '@/lib/ai';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { topic, keyPoints, audience, style } = body;
+    const { type, ...params } = body;
 
-    if (!topic || !style) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    let result;
+    switch(type) {
+      case 'post':
+        result = await generateLinkedInPost(params);
+        break;
+      case 'hooks':
+        result = await generateHooks(params);
+        break;
+      case 'variations':
+        result = await generateVariations(params);
+        break;
+      case 'edit':
+        result = await editPost(params);
+        break;
+      case 'comment':
+        result = await generateComment(params);
+        break;
+      default:
+        throw new Error('Invalid generation type');
     }
 
-    const content = await generateLinkedInPost({
-      topic,
-      keyPoints,
-      audience,
-      style,
-    });
-
-    return NextResponse.json({ content });
+    return NextResponse.json({ result });
   } catch (error: any) {
     console.error("AI Generation failed:", error);
-    return NextResponse.json({ error: error.message || "Failed to generate post" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to generate" }, { status: 500 });
   }
 }
