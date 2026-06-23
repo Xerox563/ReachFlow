@@ -25,10 +25,10 @@ const testimonials = [
 
 export const Testimonials = () => {
   return (
-    <section className="py-24 bg-gray-50/50">
+    <section className="py-24 bg-gray-50/50 dark:bg-gray-900/30">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-4xl font-bold mb-4">
+          <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">
             Loved by LinkedIn <span className="text-orange-500">Creators & Professionals</span>
           </h2>
         </div>
@@ -41,18 +41,18 @@ export const Testimonials = () => {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
-              className="p-8 rounded-2xl bg-white border border-gray-100 shadow-sm"
+              className="p-8 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm"
             >
-              <p className="text-gray-600 mb-8 italic leading-relaxed">
+              <p className="text-gray-600 dark:text-gray-400 mb-8 italic leading-relaxed">
                 "{testimonial.content}"
               </p>
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center font-bold text-orange-600">
+                <div className="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center font-bold text-orange-600 dark:text-orange-400">
                   {testimonial.avatar}
                 </div>
                 <div>
-                  <h4 className="font-bold text-gray-900">{testimonial.author}</h4>
-                  <p className="text-sm text-gray-500">{testimonial.role}</p>
+                  <h4 className="font-bold text-gray-900 dark:text-white">{testimonial.author}</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{testimonial.role}</p>
                 </div>
               </div>
             </motion.div>
@@ -61,8 +61,8 @@ export const Testimonials = () => {
 
         <div className="flex justify-center gap-2 mt-12">
           <div className="w-8 h-1 bg-orange-500 rounded-full" />
-          <div className="w-2 h-1 bg-orange-200 rounded-full" />
-          <div className="w-2 h-1 bg-orange-200 rounded-full" />
+          <div className="w-2 h-1 bg-orange-200 dark:bg-orange-800/50 rounded-full" />
+          <div className="w-2 h-1 bg-orange-200 dark:bg-orange-800/50 rounded-full" />
         </div>
       </div>
     </section>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export const Navbar = () => {
   return (
@@ -10,39 +11,42 @@ export const Navbar = () => {
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
-      className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b"
+      className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b dark:border-gray-800"
     >
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-xl">R</span>
           </div>
-          <span className="font-bold text-xl tracking-tight">ReachFlow</span>
+          <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">ReachFlow</span>
         </div>
 
         <nav className="hidden md:flex items-center gap-8">
-          <Link href="#features" className="text-sm font-medium text-gray-600 hover:text-orange-500 transition-colors">
+          <Link href="#features" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors">
             Features
           </Link>
-          <Link href="#how-it-works" className="text-sm font-medium text-gray-600 hover:text-orange-500 transition-colors">
+          <Link href="#how-it-works" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors">
             How It Works
           </Link>
-          <Link href="#use-cases" className="text-sm font-medium text-gray-600 hover:text-orange-500 transition-colors">
+          <Link href="#use-cases" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors">
             Use Cases
           </Link>
-          <Link href="#pricing" className="text-sm font-medium text-gray-600 hover:text-orange-500 transition-colors">
+          <Link href="#pricing" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors">
             Pricing
           </Link>
-          <Link href="#faq" className="text-sm font-medium text-gray-600 hover:text-orange-500 transition-colors">
+          <Link href="#faq" className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors">
             FAQ
           </Link>
         </nav>
 
-        <Link href="/dashboard">
-          <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6">
-            Request Access
-          </Button>
-        </Link>
+        <div className="flex items-center gap-4">
+          <ThemeToggle />
+          <Link href="/dashboard">
+            <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6">
+              Request Access
+            </Button>
+          </Link>
+        </div>
       </div>
     </motion.header>
   );

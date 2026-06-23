@@ -13,9 +13,9 @@ const logos = [
 
 export const SocialProof = () => {
   return (
-    <section className="py-12 border-y border-gray-100 bg-gray-50/50">
+    <section className="py-12 border-y border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30">
       <div className="container mx-auto px-4 text-center">
-        <p className="text-sm font-medium text-gray-400 mb-8 uppercase tracking-widest">
+        <p className="text-sm font-medium text-gray-400 dark:text-gray-500 mb-8 uppercase tracking-widest">
           Trusted by founders, creators, and professionals
         </p>
         <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-50 grayscale hover:grayscale-0 transition-all">
@@ -29,7 +29,7 @@ export const SocialProof = () => {
               className="flex items-center gap-2"
             >
               <span className="text-2xl grayscale">{logo.icon}</span>
-              <span className="text-xl font-bold tracking-tight text-gray-900">{logo.name}</span>
+              <span className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">{logo.name}</span>
             </motion.div>
           ))}
         </div>

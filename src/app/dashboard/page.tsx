@@ -106,41 +106,41 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50/50">
+    <div className="flex h-screen bg-gray-50/50 dark:bg-gray-950">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r hidden lg:flex flex-col">
-        <div className="p-6 flex items-center gap-2 border-b">
+      <aside className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 hidden lg:flex flex-col">
+        <div className="p-6 flex items-center gap-2 border-b border-gray-200 dark:border-gray-800">
           <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-xl">R</span>
           </div>
-          <span className="font-bold text-xl tracking-tight">ReachFlow</span>
+          <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">ReachFlow</span>
         </div>
         
         <nav className="flex-1 p-4 space-y-2">
-          <Button variant="ghost" className="w-full justify-start gap-3 text-orange-500 bg-orange-50 font-bold">
+          <Button variant="ghost" className="w-full justify-start gap-3 text-orange-500 bg-orange-50 dark:bg-orange-950/30 font-bold">
             <Plus className="w-4 h-4" />
             New Post
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-gray-500">
+          <Button variant="ghost" className="w-full justify-start gap-3 text-gray-500 dark:text-gray-400">
             <HistoryIcon className="w-4 h-4" />
             Post History
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-gray-500">
+          <Button variant="ghost" className="w-full justify-start gap-3 text-gray-500 dark:text-gray-400">
             <Layout className="w-4 h-4" />
             Content Calendar
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-gray-500">
+          <Button variant="ghost" className="w-full justify-start gap-3 text-gray-500 dark:text-gray-400">
             <Mic2 className="w-4 h-4" />
             Voice Settings
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-gray-500">
+          <Button variant="ghost" className="w-full justify-start gap-3 text-gray-500 dark:text-gray-400">
             <Library className="w-4 h-4" />
             Reference Library
           </Button>
         </nav>
 
-        <div className="p-4 border-t">
-          <Button variant="ghost" className="w-full justify-start gap-3 text-gray-500">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+          <Button variant="ghost" className="w-full justify-start gap-3 text-gray-500 dark:text-gray-400">
             <Settings className="w-4 h-4" />
             Settings
           </Button>
@@ -152,11 +152,11 @@ export default function Dashboard() {
         <div className="max-w-4xl mx-auto">
           {/* Progress Steps */}
           <div className="flex justify-between mb-12 relative">
-            <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 -translate-y-1/2 -z-10" />
+            <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 dark:bg-gray-800 -translate-y-1/2 -z-10" />
             {steps.map((step, index) => (
               <div key={step} className="flex flex-col items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs transition-colors ${
-                  index <= currentStep ? 'bg-orange-500 text-white' : 'bg-white border-2 border-gray-200 text-gray-400'
+                  index <= currentStep ? 'bg-orange-500 text-white' : 'bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 text-gray-400'
                 }`}>
                   {index + 1}
                 </div>
@@ -178,14 +178,14 @@ export default function Dashboard() {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
-                <Card className="border-none shadow-sm">
+                <Card className="border-none shadow-sm bg-white dark:bg-gray-900">
                   <CardHeader>
-                    <CardTitle>What do you want to write about?</CardTitle>
-                    <CardDescription>Enter your topic and key points to guide the AI.</CardDescription>
+                    <CardTitle className="text-gray-900 dark:text-white">What do you want to write about?</CardTitle>
+                    <CardDescription className="text-gray-500 dark:text-gray-400">Enter your topic and key points to guide the AI.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-gray-500">Topic</label>
+                      <label className="text-sm font-bold text-gray-500 dark:text-gray-400">Topic</label>
                       <Input 
                         placeholder="e.g. Why founders should build in public" 
                         value={topic}
@@ -194,7 +194,7 @@ export default function Dashboard() {
                       />
                     </div>
                     <div className="space-y-4">
-                      <label className="text-sm font-bold text-gray-500">Key Points (optional)</label>
+                      <label className="text-sm font-bold text-gray-500 dark:text-gray-400">Key Points (optional)</label>
                       {keyPoints.map((point, i) => (
                         <Input 
                           key={i}
@@ -231,31 +231,31 @@ export default function Dashboard() {
                   {styles.map((style) => (
                     <Card 
                       key={style.id}
-                      className={`cursor-pointer transition-all hover:shadow-md ${
+                      className={`cursor-pointer transition-all hover:shadow-md bg-white dark:bg-gray-900 ${
                         selectedStyle?.id === style.id ? 'border-orange-500 ring-1 ring-orange-500' : 'border-none'
                       }`}
                       onClick={() => setSelectedStyle(style)}
                     >
                       <CardHeader className="pb-2">
                         <div className="flex justify-between items-start">
-                          <span className="px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 text-[10px] font-bold border border-orange-100 uppercase">
+                          <span className="px-2 py-0.5 rounded-full bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-[10px] font-bold border border-orange-100 dark:border-orange-900/50 uppercase">
                             {style.category}
                           </span>
                           {selectedStyle?.id === style.id && <Check className="w-4 h-4 text-orange-500" />}
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-sm text-gray-600 line-clamp-3 italic mb-4">"{style.content}"</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 italic mb-4">"{style.content}"</p>
                         <div className="flex flex-wrap gap-1">
-                          <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{style.tags.hook}</span>
-                          <span className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{style.tags.structure}</span>
+                          <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded">{style.tags.hook}</span>
+                          <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded">{style.tags.structure}</span>
                         </div>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
                 <div className="flex justify-between">
-                  <Button variant="ghost" onClick={handlePrev}>
+                  <Button variant="ghost" onClick={handlePrev} className="text-gray-500 dark:text-gray-400">
                     <ChevronLeft className="w-4 h-4 mr-2" />
                     Back
                   </Button>
@@ -275,7 +275,7 @@ export default function Dashboard() {
                 className="flex flex-col items-center justify-center py-20 space-y-6"
               >
                 <div className="relative">
-                  <div className="w-20 h-20 border-4 border-orange-100 rounded-full" />
+                  <div className="w-20 h-20 border-4 border-orange-100 dark:border-orange-900/50 rounded-full" />
                   <motion.div 
                     className="w-20 h-20 border-4 border-orange-500 rounded-full border-t-transparent absolute top-0 left-0"
                     animate={{ rotate: 360 }}
@@ -284,8 +284,8 @@ export default function Dashboard() {
                   <Sparkles className="w-8 h-8 text-orange-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                 </div>
                 <div className="text-center">
-                  <h3 className="text-xl font-bold mb-2">Generating your post...</h3>
-                  <p className="text-gray-500">Matching your selected style and tone.</p>
+                  <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">Generating your post...</h3>
+                  <p className="text-gray-500 dark:text-gray-400">Matching your selected style and tone.</p>
                 </div>
               </motion.div>
             )}
@@ -297,18 +297,18 @@ export default function Dashboard() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="space-y-6"
               >
-                <Card className="border-none shadow-lg overflow-hidden">
-                  <div className="bg-gray-50 p-4 border-b flex justify-between items-center">
-                    <span className="text-sm font-bold text-gray-500 uppercase tracking-wider">Generated Result</span>
+                <Card className="border-none shadow-lg overflow-hidden bg-white dark:bg-gray-900">
+                  <div className="bg-gray-50 dark:bg-gray-800 p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                    <span className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Generated Result</span>
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={copyToClipboard}>
+                      <Button variant="ghost" size="sm" onClick={copyToClipboard} className="text-gray-500 dark:text-gray-400">
                         {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                       </Button>
                     </div>
                   </div>
                   <CardContent className="p-8">
                     <textarea 
-                      className="w-full h-[400px] text-lg leading-relaxed text-gray-700 bg-transparent border-none focus:ring-0 outline-none resize-none"
+                      className="w-full h-[400px] text-lg leading-relaxed text-gray-700 dark:text-gray-300 bg-transparent border-none focus:ring-0 outline-none resize-none"
                       value={generatedContent}
                       onChange={(e) => setGeneratedContent(e.target.value)}
                     />
@@ -319,7 +319,7 @@ export default function Dashboard() {
                   <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-8 h-12">
                     Save to History
                   </Button>
-                  <Button variant="outline" className="rounded-full px-8 h-12 border-gray-200" onClick={() => setCurrentStep(1)}>
+                  <Button variant="outline" className="rounded-full px-8 h-12 border-gray-200 dark:border-gray-700" onClick={() => setCurrentStep(1)}>
                     Try Another Style
                   </Button>
                 </div>

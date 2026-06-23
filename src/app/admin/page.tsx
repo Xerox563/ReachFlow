@@ -51,7 +51,7 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50/50 p-8">
+    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950 p-8">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ y: -20, opacity: 0 }}
@@ -59,8 +59,8 @@ export default function AdminDashboard() {
           className="flex justify-between items-center mb-8"
         >
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Reference Library</h1>
-            <p className="text-gray-500">Manage high-performing LinkedIn posts for AI training.</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Reference Library</h1>
+            <p className="text-gray-500 dark:text-gray-400">Manage high-performing LinkedIn posts for AI training.</p>
           </div>
           <Dialog>
             <DialogTrigger
@@ -71,22 +71,22 @@ export default function AdminDashboard() {
                 </Button>
               }
             />
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="sm:max-w-[600px] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
               <DialogHeader>
-                <DialogTitle>Add Reference Post</DialogTitle>
+                <DialogTitle className="text-gray-900 dark:text-white">Add Reference Post</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Post Content</label>
+                  <label className="text-sm font-medium text-gray-900 dark:text-white">Post Content</label>
                   <textarea 
-                    className="w-full h-32 p-3 rounded-md border border-gray-200 focus:ring-2 focus:ring-orange-500 outline-none"
+                    className="w-full h-32 p-3 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 outline-none"
                     placeholder="Paste the LinkedIn post here..."
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Category</label>
-                    <select className="w-full p-2 rounded-md border border-gray-200">
+                    <label className="text-sm font-medium text-gray-900 dark:text-white">Category</label>
+                    <select className="w-full p-2 rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
                       <option>Founder</option>
                       <option>Storytelling</option>
                       <option>Career Growth</option>
@@ -96,27 +96,27 @@ export default function AdminDashboard() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Author</label>
+                    <label className="text-sm font-medium text-gray-900 dark:text-white">Author</label>
                     <Input placeholder="e.g. Justin Welsh" />
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Hook Tag</label>
+                    <label className="text-sm font-medium text-gray-900 dark:text-white">Hook Tag</label>
                     <Input placeholder="e.g. Question" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Structure Tag</label>
+                    <label className="text-sm font-medium text-gray-900 dark:text-white">Structure Tag</label>
                     <Input placeholder="e.g. Listicle" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Content Tag</label>
+                    <label className="text-sm font-medium text-gray-900 dark:text-white">Content Tag</label>
                     <Input placeholder="e.g. Educational" />
                   </div>
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline">Cancel</Button>
+                <Button variant="outline" className="border-gray-200 dark:border-gray-700">Cancel</Button>
                 <Button className="bg-orange-500 hover:bg-orange-600 text-white">Save Post</Button>
               </DialogFooter>
             </DialogContent>
@@ -124,28 +124,28 @@ export default function AdminDashboard() {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-white border-none shadow-sm">
+          <Card className="bg-white dark:bg-gray-900 border-none shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">Total Posts</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Posts</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{posts.length}</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">{posts.length}</div>
             </CardContent>
           </Card>
-          <Card className="bg-white border-none shadow-sm">
+          <Card className="bg-white dark:bg-gray-900 border-none shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">Categories</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-500 dark:text-gray-400">Categories</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">6</div>
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">6</div>
             </CardContent>
           </Card>
         </div>
 
-        <Card className="bg-white border-none shadow-sm">
+        <Card className="bg-white dark:bg-gray-900 border-none shadow-sm">
           <CardHeader>
             <div className="flex justify-between items-center">
-              <CardTitle>Library Posts</CardTitle>
+              <CardTitle className="text-gray-900 dark:text-white">Library Posts</CardTitle>
               <div className="flex gap-4">
                 <div className="relative">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
                     onChange={(e) => setSearch(e.target.value)}
                   />
                 </div>
-                <Button variant="outline">
+                <Button variant="outline" className="border-gray-200 dark:border-gray-700">
                   <Filter className="w-4 h-4 mr-2" />
                   Filter
                 </Button>
@@ -166,24 +166,24 @@ export default function AdminDashboard() {
           <CardContent>
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Content Preview</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Tags</TableHead>
-                  <TableHead>Author</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                <TableRow className="border-gray-200 dark:border-gray-700">
+                  <TableHead className="text-gray-500 dark:text-gray-400">Content Preview</TableHead>
+                  <TableHead className="text-gray-500 dark:text-gray-400">Category</TableHead>
+                  <TableHead className="text-gray-500 dark:text-gray-400">Tags</TableHead>
+                  <TableHead className="text-gray-500 dark:text-gray-400">Author</TableHead>
+                  <TableHead className="text-right text-gray-500 dark:text-gray-400">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                  <TableRow className="border-gray-200 dark:border-gray-700">
+                    <TableCell colSpan={5} className="text-center py-8 text-gray-500 dark:text-gray-400">
                       Loading posts...
                     </TableCell>
                   </TableRow>
                 ) : filteredPosts.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                  <TableRow className="border-gray-200 dark:border-gray-700">
+                    <TableCell colSpan={5} className="text-center py-8 text-gray-500 dark:text-gray-400">
                       No posts found matching your search.
                     </TableCell>
                   </TableRow>
@@ -194,27 +194,27 @@ export default function AdminDashboard() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="group hover:bg-gray-50/50"
+                      className="group hover:bg-gray-50/50 dark:hover:bg-gray-800/50 border-gray-200 dark:border-gray-700"
                     >
                       <TableCell className="max-w-md">
-                        <p className="line-clamp-2 text-sm text-gray-600">{post.content}</p>
+                        <p className="line-clamp-2 text-sm text-gray-600 dark:text-gray-400">{post.content}</p>
                       </TableCell>
                       <TableCell>
-                        <span className="px-2 py-1 rounded-full bg-orange-50 text-orange-600 text-xs font-medium border border-orange-100">
+                        <span className="px-2 py-1 rounded-full bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs font-medium border border-orange-100 dark:border-orange-900/50">
                           {post.category}
                         </span>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                          <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded">
                             {post.tags.hook}
                           </span>
-                          <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                          <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded">
                             {post.tags.structure}
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm font-medium">{post.author || 'Unknown'}</TableCell>
+                      <TableCell className="text-sm font-medium text-gray-900 dark:text-white">{post.author || 'Unknown'}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-orange-500">
