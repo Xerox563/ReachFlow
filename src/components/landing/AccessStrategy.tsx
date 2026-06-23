@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
+import Link from "next/link";
 
 export const AccessStrategy = () => {
   return (
@@ -39,9 +40,11 @@ export const AccessStrategy = () => {
                 </li>
               ))}
             </ul>
-            <Button className="w-full bg-orange-500 hover:bg-orange-600 h-12 rounded-full font-bold">
-              Try It Free - Generate 1 Post
-            </Button>
+            <Link href="/dashboard">
+              <Button className="w-full bg-orange-500 hover:bg-orange-600 h-12 rounded-full font-bold">
+                Try It Free - Generate 1 Post
+              </Button>
+            </Link>
           </motion.div>
 
           <motion.div
@@ -63,9 +66,11 @@ export const AccessStrategy = () => {
                 </li>
               ))}
             </ul>
-            <Button variant="outline" className="w-full border-gray-200 h-12 rounded-full font-bold">
-              Request Access
-            </Button>
+            <Link href="/dashboard">
+              <Button variant="outline" className="w-full border-gray-200 h-12 rounded-full font-bold">
+                Request Access
+              </Button>
+            </Link>
           </motion.div>
         </div>
       </div>

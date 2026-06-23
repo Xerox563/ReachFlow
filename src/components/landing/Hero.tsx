@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { CheckCircle2, Sparkles, Layout } from "lucide-react";
+import Link from "next/link";
 
 export const Hero = () => {
   return (
@@ -49,12 +50,16 @@ export const Hero = () => {
             </div>
 
             <div className="flex flex-wrap gap-4 mb-6">
-              <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-8 h-12">
-                Try It Free - Generate 1 Post
-              </Button>
-              <Button size="lg" variant="outline" className="rounded-full px-8 h-12 border-gray-200">
-                Request Access
-              </Button>
+              <Link href="/dashboard">
+                <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-8 h-12">
+                  Try It Free - Generate 1 Post
+                </Button>
+              </Link>
+              <Link href="/dashboard">
+                <Button size="lg" variant="outline" className="rounded-full px-8 h-12 border-gray-200">
+                  Request Access
+                </Button>
+              </Link>
             </div>
 
             <div className="flex flex-wrap gap-6">

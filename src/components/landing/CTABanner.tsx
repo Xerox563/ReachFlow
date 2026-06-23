@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export const CTABanner = () => {
   return (
@@ -21,12 +22,16 @@ export const CTABanner = () => {
               Try ReachFlow today and write LinkedIn posts that connect, engage, and grow your audience.
             </p>
             <div className="flex flex-wrap justify-center gap-4 mb-6">
-              <Button size="lg" className="bg-white text-orange-500 hover:bg-orange-50 rounded-full px-8 h-14 text-lg font-bold shadow-xl shadow-orange-900/20">
-                Try It Free - Generate 1 Post
-              </Button>
-              <Button size="lg" variant="outline" className="border-orange-400 text-white hover:bg-orange-600 rounded-full px-8 h-14 text-lg font-bold">
-                Request Access
-              </Button>
+              <Link href="/dashboard">
+                <Button size="lg" className="bg-white text-orange-500 hover:bg-orange-50 rounded-full px-8 h-14 text-lg font-bold shadow-xl shadow-orange-900/20">
+                  Try It Free - Generate 1 Post
+                </Button>
+              </Link>
+              <Link href="/dashboard">
+                <Button size="lg" variant="outline" className="border-orange-400 text-white hover:bg-orange-600 rounded-full px-8 h-14 text-lg font-bold">
+                  Request Access
+                </Button>
+              </Link>
             </div>
             <p className="text-orange-200 text-sm">
               No credit card required

@@ -38,9 +38,11 @@ export const Navbar = () => {
           </Link>
         </nav>
 
-        <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6">
-          Request Access
-        </Button>
+        <Link href="/dashboard">
+          <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-6">
+            Request Access
+          </Button>
+        </Link>
       </div>
     </motion.header>
   );
