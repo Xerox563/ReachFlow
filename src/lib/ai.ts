@@ -17,7 +17,51 @@ export async function generateLinkedInPost({
   const model = process.env.AI_MODEL_NAME || 'anthropic/claude-3-sonnet';
 
   if (!apiKey) {
-    throw new Error("OPENROUTER_API_KEY is not set");
+    console.warn("OPENROUTER_API_KEY not set - returning demo LinkedIn post");
+    return `I used to think building software was all about lines of code. 
+
+Until I spent 3 years leading a team that shipped 0 meaningful features. 
+
+Here's what I learned the hard way: 
+
+The best code is the code you don't write. 
+
+Last month we had a big feature request from 5 clients. 
+
+First instinct: Hire 2 more devs, start coding immediately. 
+
+Instead: We spent 2 days talking to those 5 clients. 
+
+Turned out 4/5 of them just needed a small tweak to an existing feature. 
+
+The 5th? Their problem was solved by a 3rd-party tool we already integrate with. 
+
+We delivered everything in 1 week. 0 new devs. 0 new features. 
+
+And our NPS went up 21 points. 
+
+The best engineers I know don't code first. 
+
+They ask first. 
+
+They understand first. 
+
+Then they solve the right problem. 
+
+This applies to everything:
+
+- Product
+- Marketing
+- Sales
+- Your career
+
+Stop doing work. 
+
+Start solving problems. 
+
+What's a problem you've been "working on" that you should actually understand first? 
+
+👇 Let me know in the comments!`;
   }
 
   const voiceContext = voiceSamples ? `
@@ -87,7 +131,14 @@ export async function generateHooks({
   const model = process.env.AI_MODEL_NAME || 'anthropic/claude-3-sonnet';
 
   if (!apiKey) {
-    throw new Error("OPENROUTER_API_KEY is not set");
+    console.warn("OPENROUTER_API_KEY not set - returning demo hooks");
+    return [
+      `What if I told you something about ${topic} that changed everything?`,
+      `I used to think X about ${topic} — until I learned this.`,
+      `Here's the biggest mistake I see with ${topic}.`,
+      `What nobody tells you about ${topic}.`,
+      `The moment I realized I was wrong about ${topic}.`
+    ];
   }
 
   const prompt = `
@@ -137,7 +188,12 @@ export async function generateVariations({
   const model = process.env.AI_MODEL_NAME || 'anthropic/claude-3-sonnet';
 
   if (!apiKey) {
-    throw new Error("OPENROUTER_API_KEY is not set");
+    console.warn("OPENROUTER_API_KEY not set - returning demo variations");
+    return {
+      story: "Demo story version of your post.",
+      professional: "Demo professional version.",
+      engaging: "Demo engaging version."
+    };
   }
 
   const prompt = `
@@ -205,7 +261,8 @@ export async function editPost({
   const model = process.env.AI_MODEL_NAME || 'anthropic/claude-3-sonnet';
 
   if (!apiKey) {
-    throw new Error("OPENROUTER_API_KEY is not set");
+    console.warn("OPENROUTER_API_KEY not set - returning demo edit");
+    return `Demo ${action} edit of your original post! Add your API key for real edits!`;
   }
 
   let actionPrompt = '';
@@ -268,7 +325,12 @@ export async function generateComment({
   const model = process.env.AI_MODEL_NAME || 'anthropic/claude-3-sonnet';
 
   if (!apiKey) {
-    throw new Error("OPENROUTER_API_KEY is not set");
+    console.warn("OPENROUTER_API_KEY not set - returning demo comments");
+    return [
+      "That's a great perspective! Thanks for sharing.",
+      "Really insightful post, thanks for the value!",
+      "Love this! Definitely something to think about."
+    ];
   }
 
   const goalPrompt = goal === 'network' ? 'Focus on building a connection with the author' :
