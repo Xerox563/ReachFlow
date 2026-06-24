@@ -150,9 +150,19 @@ export default function Dashboard() {
   const [generatedComments, setGeneratedComments] = useState<string[]>([]);
   const [isGeneratingComment, setIsGeneratingComment] = useState(false);
 
+  // API Key State
+  const [apiKey, setApiKey] = useState("");
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+
   const steps = ["Topic", "Style", "Hook", "History", "Calendar", "Voice", "Library", "Comment"];
 
   useEffect(() => {
+    // Load API key from localStorage
+    const savedApiKey = localStorage.getItem("reachflow_openrouter_key");
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+    }
+
     if (!isSupabaseConfigured) {
       // Demo mode - use localStorage
       const savedPosts = localStorage.getItem("reachflow_posts");
@@ -406,6 +416,18 @@ export default function Dashboard() {
     setKeyPoints(newPoints);
   };
 
+  const saveApiKey = () => {
+    localStorage.setItem("reachflow_openrouter_key", apiKey);
+    toast.success("API Key saved!");
+    setShowApiKeyModal(false);
+  };
+
+  const clearApiKey = () => {
+    localStorage.removeItem("reachflow_openrouter_key");
+    setApiKey("");
+    toast.success("API Key cleared!");
+  };
+
   const generateHooks = async () => {
     if (!topic) {
       toast.error("Please enter a topic first");
@@ -420,6 +442,7 @@ export default function Dashboard() {
           type: "hooks",
           topic,
           count: 10,
+          apiKey: apiKey || undefined,
         }),
       });
       const data = await res.json();
@@ -453,6 +476,7 @@ export default function Dashboard() {
           audience,
           style: selectedStyle,
           voiceSamples: voiceSamples.length > 0 ? voiceSamples : undefined,
+          apiKey: apiKey || undefined,
         }),
       });
 
@@ -490,6 +514,7 @@ export default function Dashboard() {
         body: JSON.stringify({
           type: "variations",
           content: generatedContent,
+          apiKey: apiKey || undefined,
         }),
       });
       const data = await res.json();
@@ -519,6 +544,7 @@ export default function Dashboard() {
           type: "edit",
           content: generatedContent,
           action,
+          apiKey: apiKey || undefined,
         }),
       });
       const data = await res.json();
@@ -546,6 +572,7 @@ export default function Dashboard() {
           type: "comment",
           postContent: postToComment,
           goal: commentGoal,
+          apiKey: apiKey || undefined,
         }),
       });
       const data = await res.json();
@@ -955,35 +982,58 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="h-16 shrink-0 border-b border-gray-200/70 dark:border-gray-800 flex items-center justify-end px-8 gap-3 bg-[#FAF9F7] dark:bg-gray-950">
-          <button className="w-9 h-9 rounded-full bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700 flex items-center justify-center hover:bg-gray-50 transition-colors">
-            <Sun className="w-4 h-4 text-gray-600 dark:text-gray-300" />
-          </button>
-          {status === "authenticated" ? (
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5 group">
-                <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-600 font-semibold flex items-center justify-center text-sm overflow-hidden">
-                  {user.email?.[0]?.toUpperCase() || "U"}
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-gray-900 dark:text-white line-clamp-1">
-                    Welcome
-                  </span>
-                  <span className="text-[10px] text-gray-500 dark:text-gray-400 line-clamp-1">
-                    {user.email}
-                  </span>
-                </div>
-              </div>
+        <header className="h-16 shrink-0 border-b border-gray-200/70 dark:border-gray-800 flex items-center justify-between px-8 gap-3 bg-[#FAF9F7] dark:bg-gray-950">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowApiKeyModal(true)}
+              className="rounded-lg border-gray-200 dark:border-gray-700"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              {apiKey ? "API Key: ••••" : "Add OpenRouter Key"}
+            </Button>
+            {apiKey && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleLogout}
-                className="text-gray-500 hover:text-red-500"
+                onClick={clearApiKey}
+                className="rounded-lg text-red-500"
               >
-                <LogOut className="w-4 h-4" />
+                Clear
               </Button>
-            </div>
-          ) : null}
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="w-9 h-9 rounded-full bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700 flex items-center justify-center hover:bg-gray-50 transition-colors">
+              <Sun className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+            </button>
+            {status === "authenticated" ? (
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1.5 group">
+                  <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-600 font-semibold flex items-center justify-center text-sm overflow-hidden">
+                    {user.email?.[0]?.toUpperCase() || "U"}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-gray-900 dark:text-white line-clamp-1">
+                      Welcome
+                    </span>
+                    <span className="text-[10px] text-gray-500 dark:text-gray-400 line-clamp-1">
+                      {user.email}
+                    </span>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="text-gray-500 hover:text-red-500"
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : null}
+          </div>
         </header>
 
         <main className="flex-1 overflow-auto px-8 py-8">
@@ -2294,6 +2344,51 @@ export default function Dashboard() {
                   })()}
                 </div>
               </motion.div>
+            )}
+
+            {/* API Key Modal */}
+            {showApiKeyModal && (
+              <div 
+                className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" 
+                onClick={() => setShowApiKeyModal(false)}
+              >
+                <div 
+                  className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md" 
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">OpenRouter API Key</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                    Get your API key from <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-orange-500 font-medium">openrouter.ai/keys</a>
+                  </p>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Key</label>
+                      <Input 
+                        type="password" 
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        placeholder="sk-or-v1-..."
+                      />
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <button 
+                        type="button" 
+                        onClick={() => setShowApiKeyModal(false)}
+                        className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={saveApiKey}
+                        className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg font-bold"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Add Library Post Modal */}
