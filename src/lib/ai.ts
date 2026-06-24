@@ -262,7 +262,22 @@ export async function editPost({
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo edit");
-    return `Demo ${action} edit of your original post! Add your API key for real edits!`;
+    if (action === 'rewrite') {
+      return "Let me rewrite that for you, better: \n\nI used to think shipping features fast was the goal.\n\nUntil we shipped 3 features that no one used. \n\nThe hard truth? Building the wrong thing is worse than building nothing. \n\nNow we spend 50% of our time before coding. \n\nTalking to users. \n\nUnderstanding the problem. \n\nAnd we've cut our waste by 70%. \n\nBuild fast, but only after you understand. \n\nHow do you validate before building? 👇";
+    }
+    if (action === 'shorten') {
+      return "Building the wrong thing is worse than building nothing. \n\nTalk to users first. \n\nIt will save you months. \n\n---\n\nThis took us 3 years to learn. Don't make the same mistake. 👇";
+    }
+    if (action === 'expand') {
+      return "I used to think shipping features fast was the only measure of success. \n\nUntil we spent 3 months building a feature request from 2 clients. \n\nLaunched it. \n\nOnly one of them used it. \n\nAnd even they stopped after 2 weeks. \n\nThat's when we changed everything. \n\nNow we spend: \n\n50% of time just talking to users \n\n25% defining the problem \n\n25% coding the solution \n\nOur last 3 features? \n\nUsed by 80%+ of clients within 30 days. \n\nHere's the lesson: \n\nUnderstanding the problem is the real work. \n\nThe coding is easy. \n\nWhat's a feature you built that no one used? 👇";
+    }
+    if (action === 'professional') {
+      return "Product Development Lessons From 3 Years of Building. \n\nKey Learnings:\n1. 80% of successful features come from user interviews, not internal ideas\n2. The cost of building the wrong thing is 10x more than the cost of validation\n3. Speed matters—but only when it's the right speed \n\nOur Process:\n1. Talk to 5 users\n2. Define the problem in 1 sentence\n3. Prototype in 1 week\n4. Launch, measure, iterate\n\nWhat's your validation process? 👇";
+    }
+    if (action === 'viral') {
+      return "This might get hate. \n\nBut I'm going to say it anyway. \n\nStop building features first. \n\nStart talking to users first. \n\nWe spent 3 months building something that died. \n\nAll because we didn't ask: \"Do you actually need this?\"\n\nSince changing our process: \n\n- 80% of our features stick\n- Support tickets down 40% \n- Churn down 35%\n\nWant to know what we do instead? \n\nComment \"PROCESS\" and I'll send it to you 👇";
+    }
+    return content;
   }
 
   let actionPrompt = '';
