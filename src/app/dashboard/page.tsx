@@ -136,6 +136,11 @@ export default function Dashboard() {
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [selectedDateForEvent, setSelectedDateForEvent] = useState<string | null>(null);
 
+  // Reference Library State
+  const [librarySearch, setLibrarySearch] = useState("");
+  const [libraryFilter, setLibraryFilter] = useState<string>("all");
+  const [showAddLibraryModal, setShowAddLibraryModal] = useState(false);
+
   // Comment Generator State
   const [postToComment, setPostToComment] = useState("");
   const [commentGoal, setCommentGoal] = useState<
@@ -151,6 +156,7 @@ export default function Dashboard() {
       const savedPosts = localStorage.getItem("reachflow_posts");
       const savedVoices = localStorage.getItem("reachflow_voice");
       const savedEvents = localStorage.getItem("reachflow_calendar_events");
+      const savedLibrary = localStorage.getItem("reachflow_library");
       
       if (savedPosts) setSavedPosts(JSON.parse(savedPosts));
       if (savedVoices) setVoiceSamples(JSON.parse(savedVoices));
@@ -159,6 +165,10 @@ export default function Dashboard() {
       setStatus("demo");
       setUser({ email: "demo@reachflow.com" });
       fetchStyles();
+      
+      if (savedLibrary) {
+        setLibraryPosts(JSON.parse(savedLibrary));
+      }
       return;
     }
 
@@ -196,6 +206,37 @@ export default function Dashboard() {
       subscription.unsubscribe();
     };
   }, []);
+
+  const addLibraryPost = async (post: Omit<ReferencePost, "id" | "createdAt">) => {
+    const newPost: ReferencePost = {
+      ...post,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString(),
+    };
+    const updated = [newPost, ...(libraryPosts.length > 0 ? libraryPosts : styles)];
+    setLibraryPosts(updated);
+    
+    if (!isSupabaseConfigured) {
+      localStorage.setItem("reachflow_library", JSON.stringify(updated));
+    }
+    
+    toast.success("Added to library!");
+    setShowAddLibraryModal(false);
+  };
+
+  const deleteLibraryPost = async (id: string) => {
+    const updated = libraryPosts.length > 0 
+      ? libraryPosts.filter(p => p.id !== id) 
+      : styles.filter(p => p.id !== id);
+      
+    setLibraryPosts(updated);
+    
+    if (!isSupabaseConfigured) {
+      localStorage.setItem("reachflow_library", JSON.stringify(updated));
+    }
+    
+    toast.success("Removed from library");
+  };
 
   const fetchStyles = async () => {
     const res = await fetch("/api/reference-posts");
@@ -2184,20 +2225,28 @@ export default function Dashboard() {
                       <Input
                         placeholder="Search reference posts..."
                         className="pl-9 h-10 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-lg text-sm"
+                        value={librarySearch}
+                        onChange={(e) => setLibrarySearch(e.target.value)}
                       />
                     </div>
-                    <Select defaultValue="all">
+                    <Select value={libraryFilter} onValueChange={setLibraryFilter}>
                       <SelectTrigger className="w-[140px] h-10 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-lg text-sm">
                         <SelectValue placeholder="All Categories" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Categories</SelectItem>
-                        <SelectItem value="founder">Founder</SelectItem>
-                        <SelectItem value="ai">AI</SelectItem>
-                        <SelectItem value="sales">Sales</SelectItem>
+                        <SelectItem value="Founder">Founder</SelectItem>
+                        <SelectItem value="AI">AI</SelectItem>
+                        <SelectItem value="Sales">Sales</SelectItem>
+                        <SelectItem value="Storytelling">Storytelling</SelectItem>
+                        <SelectItem value="Career Growth">Career Growth</SelectItem>
+                        <SelectItem value="Marketing">Marketing</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg h-10 px-4 font-bold text-sm shadow-lg shadow-orange-500/20">
+                    <Button 
+                      className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg h-10 px-4 font-bold text-sm shadow-lg shadow-orange-500/20"
+                      onClick={() => setShowAddLibraryModal(true)}
+                    >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Post
                     </Button>
@@ -2205,7 +2254,19 @@ export default function Dashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {styles.map((style, i) => (
+                  {(() => {
+                    const posts = libraryPosts.length > 0 ? libraryPosts : styles;
+                    const filtered = posts.filter(p => {
+                      const matchesSearch = 
+                        p.content.toLowerCase().includes(librarySearch.toLowerCase()) ||
+                        (p.author && p.author.toLowerCase().includes(librarySearch.toLowerCase()));
+                      
+                      const matchesCategory = 
+                        libraryFilter === "all" || p.category === libraryFilter;
+                        
+                      return matchesSearch && matchesCategory;
+                    });
+                    return filtered.map((style, i) => (
                     <motion.div
                       key={style.id}
                       initial={{ opacity: 0, scale: 0.95 }}
@@ -2228,6 +2289,17 @@ export default function Dashboard() {
                               </Button>
                               <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-400 hover:text-orange-500">
                                 <Heart className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-7 w-7 p-0 text-gray-400 hover:text-red-500"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteLibraryPost(style.id);
+                                }}
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
                               </Button>
                             </div>
                           </div>
@@ -2261,9 +2333,105 @@ export default function Dashboard() {
                         </CardContent>
                       </Card>
                     </motion.div>
-                  ))}
+                  ));
+                  })()}
                 </div>
               </motion.div>
+            )}
+
+            {/* Add Library Post Modal */}
+            {showAddLibraryModal && (
+              <div 
+                className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" 
+                onClick={() => setShowAddLibraryModal(false)}
+              >
+                <div 
+                  className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-2xl" 
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Add Reference Post</h3>
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const formData = new FormData(e.currentTarget);
+                      addLibraryPost({
+                        content: formData.get("content") as string,
+                        category: formData.get("category") as Category,
+                        tags: {
+                          hook: formData.get("hook") as string,
+                          structure: formData.get("structure") as string,
+                          contentType: formData.get("contentType") as string,
+                        },
+                        author: formData.get("author") as string || undefined,
+                      });
+                      e.currentTarget.reset();
+                    }} 
+                    className="space-y-4"
+                  >
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Post Content</label>
+                      <Textarea 
+                        name="content" 
+                        required 
+                        rows={6}
+                        className="w-full"
+                        placeholder="Paste your LinkedIn post here..."
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                        <Select name="category" defaultValue="Founder">
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category"/>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Founder">Founder</SelectItem>
+                            <SelectItem value="AI">AI</SelectItem>
+                            <SelectItem value="Sales">Sales</SelectItem>
+                            <SelectItem value="Storytelling">Storytelling</SelectItem>
+                            <SelectItem value="Career Growth">Career Growth</SelectItem>
+                            <SelectItem value="Marketing">Marketing</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Author (Optional)</label>
+                        <Input name="author" placeholder="e.g., Jane Doe"/>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hook Type</label>
+                        <Input name="hook" placeholder="e.g., Contrarian truth"/>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Structure</label>
+                        <Input name="structure" placeholder="e.g., Problem/Solution"/>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Content Type</label>
+                        <Input name="contentType" placeholder="e.g., Business Lesson"/>
+                      </div>
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <button 
+                        type="button" 
+                        onClick={() => setShowAddLibraryModal(false)}
+                        className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300"
+                      >
+                        Cancel
+                      </button>
+                      <button 
+                        type="submit" 
+                        className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg font-bold"
+                      >
+                        Add Post
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
             )}
 
             {/* AI Comment Generator Section */}
