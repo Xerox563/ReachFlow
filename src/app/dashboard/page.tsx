@@ -614,7 +614,7 @@ export default function Dashboard() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const loadPost = (post: SavedPost) => {
+  const loadPost = async (post: SavedPost) => {
     setTopic(post.topic);
     setKeyPoints(post.keyPoints);
     setAudience(post.audience);
@@ -625,6 +625,23 @@ export default function Dashboard() {
     setVariations(post.variations);
     setCurrentStep(4);
     setSection("newPost");
+
+    // Increment uses
+    const updatedUses = (post.uses || 0) + 1;
+    const updated = savedPosts.map(p => 
+      p.id === post.id ? { ...p, uses: updatedUses } : p
+    );
+
+    if (isSupabaseConfigured && user?.id) {
+      await supabase
+        .from("posts")
+        .update({ uses: updatedUses })
+        .eq("id", post.id)
+        .eq("user_id", user.id);
+    } else {
+      localStorage.setItem("reachflow_posts", JSON.stringify(updated));
+    }
+    setSavedPosts(updated);
   };
 
   const resetNewPost = () => {
