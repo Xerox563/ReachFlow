@@ -30,6 +30,7 @@ export interface GeneratedPost {
   selectedHook?: string;
   variations?: PostVariation;
   createdAt: string;
+  isFavorite?: boolean;
 }
 
 export interface SavedPost {

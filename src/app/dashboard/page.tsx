@@ -84,9 +84,16 @@ type DashboardSection =
   | "library"
   | "comment";
 
+// Check if Supabase is configured
+const isSupabaseConfigured = 
+  process.env.NEXT_PUBLIC_SUPABASE_URL && 
+  process.env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co' &&
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'placeholder';
+
 export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
-  const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
+  const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated" | "demo">("loading");
   const [authView, setAuthView] = useState<"login" | "signup">("login");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
@@ -118,6 +125,8 @@ export default function Dashboard() {
 
   // Post History State
   const [savedPosts, setSavedPosts] = useState<SavedPost[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStyle, setFilterStyle] = useState("all");
 
   // Comment Generator State
   const [postToComment, setPostToComment] = useState("");
@@ -129,6 +138,20 @@ export default function Dashboard() {
   const steps = ["Topic", "Style", "Hook", "Generate", "Edit"];
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      // Demo mode - use localStorage
+      const savedPosts = localStorage.getItem("reachflow_posts");
+      const savedVoices = localStorage.getItem("reachflow_voice");
+      
+      if (savedPosts) setSavedPosts(JSON.parse(savedPosts));
+      if (savedVoices) setVoiceSamples(JSON.parse(savedVoices));
+      
+      setStatus("demo");
+      setUser({ email: "demo@reachflow.com" });
+      fetchStyles();
+      return;
+    }
+
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
@@ -169,6 +192,8 @@ export default function Dashboard() {
   };
 
   const loadSavedPosts = async (userId: string) => {
+    if (!isSupabaseConfigured) return;
+    
     const { data, error } = await supabase
       .from("posts")
       .select("*")
@@ -184,6 +209,8 @@ export default function Dashboard() {
   };
 
   const loadVoiceSamples = async (userId: string) => {
+    if (!isSupabaseConfigured) return;
+    
     const { data, error } = await supabase
       .from("voices")
       .select("*")
@@ -196,6 +223,11 @@ export default function Dashboard() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isSupabaseConfigured) {
+      toast.info("Demo mode active - no Supabase configured");
+      return;
+    }
+    
     setAuthLoading(true);
     try {
       const { error } = await supabase.auth.signUp({
@@ -214,6 +246,11 @@ export default function Dashboard() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isSupabaseConfigured) {
+      toast.info("Demo mode active - no Supabase configured");
+      return;
+    }
+    
     setAuthLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -229,22 +266,30 @@ export default function Dashboard() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    if (isSupabaseConfigured) {
+      await supabase.auth.signOut();
+    }
     toast.success("Logged out!");
   };
 
   const saveVoiceSample = async () => {
-    if (newSample.trim() && user?.id) {
-      const { error } = await supabase.from("voices").insert([
-        {
-          user_id: user.id,
-          content: newSample.trim(),
-        },
-      ]);
+    if (newSample.trim()) {
+      if (isSupabaseConfigured && user?.id) {
+        const { error } = await supabase.from("voices").insert([
+          {
+            user_id: user.id,
+            content: newSample.trim(),
+          },
+        ]);
 
-      if (error) {
-        toast.error("Failed to save voice sample");
-        return;
+        if (error) {
+          toast.error("Failed to save voice sample");
+          return;
+        }
+      } else {
+        // Demo mode - localStorage
+        const updated = [...voiceSamples, newSample.trim()];
+        localStorage.setItem("reachflow_voice", JSON.stringify(updated));
       }
 
       setVoiceSamples([...voiceSamples, newSample.trim()]);
@@ -254,21 +299,25 @@ export default function Dashboard() {
   };
 
   const removeVoiceSample = async (index: number) => {
-    if (!user?.id) return;
     const sampleContent = voiceSamples[index];
+    const updated = voiceSamples.filter((_, i) => i !== index);
+    
+    if (isSupabaseConfigured && user?.id) {
+      const { error } = await supabase
+        .from("voices")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("content", sampleContent);
 
-    const { error } = await supabase
-      .from("voices")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("content", sampleContent);
-
-    if (error) {
-      toast.error("Failed to remove voice sample");
-      return;
+      if (error) {
+        toast.error("Failed to remove voice sample");
+        return;
+      }
+    } else {
+      // Demo mode - localStorage
+      localStorage.setItem("reachflow_voice", JSON.stringify(updated));
     }
 
-    const updated = voiceSamples.filter((_, i) => i !== index);
     setVoiceSamples(updated);
   };
 
@@ -433,49 +482,74 @@ export default function Dashboard() {
   };
 
   const savePost = async () => {
-    if (!generatedContent || !user?.id) return;
-    const newPostData = {
-      user_id: user.id,
-      topic,
-      keyPoints,
-      audience,
-      selectedStyle: selectedStyle!,
-      content: generatedContent,
-      hookOptions,
-      selectedHook,
-      variations,
-    };
+    if (!generatedContent) return;
+    
+    if (isSupabaseConfigured && user?.id) {
+      const newPostData = {
+        user_id: user.id,
+        topic,
+        keyPoints,
+        audience,
+        selectedStyle: selectedStyle!,
+        content: generatedContent,
+        hookOptions,
+        selectedHook,
+        variations,
+      };
 
-    const { data, error } = await supabase
-      .from("posts")
-      .insert([newPostData])
-      .select()
-      .single();
+      const { data, error } = await supabase
+        .from("posts")
+        .insert([newPostData])
+        .select()
+        .single();
 
-    if (error) {
-      toast.error("Failed to save post");
-      return;
+      if (error) {
+        toast.error("Failed to save post");
+        return;
+      }
+
+      setSavedPosts([{ ...data, createdAt: data.created_at }, ...savedPosts]);
+    } else {
+      // Demo mode - localStorage
+      const newPost: SavedPost = {
+        id: Date.now().toString(),
+        topic,
+        keyPoints,
+        audience,
+        selectedStyle: selectedStyle!,
+        content: generatedContent,
+        hookOptions,
+        selectedHook,
+        variations,
+        createdAt: new Date().toISOString(),
+      };
+      const updated = [newPost, ...savedPosts];
+      localStorage.setItem("reachflow_posts", JSON.stringify(updated));
+      setSavedPosts(updated);
     }
-
-    setSavedPosts([{ ...data, createdAt: data.created_at }, ...savedPosts]);
+    
     toast.success("Post saved!");
   };
 
   const deletePost = async (id: string) => {
-    if (!user?.id) return;
+    const updated = savedPosts.filter((p) => p.id !== id);
+    
+    if (isSupabaseConfigured && user?.id) {
+      const { error } = await supabase
+        .from("posts")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", user.id);
 
-    const { error } = await supabase
-      .from("posts")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", user.id);
-
-    if (error) {
-      toast.error("Failed to delete post");
-      return;
+      if (error) {
+        toast.error("Failed to delete post");
+        return;
+      }
+    } else {
+      // Demo mode - localStorage
+      localStorage.setItem("reachflow_posts", JSON.stringify(updated));
     }
 
-    const updated = savedPosts.filter((p) => p.id !== id);
     setSavedPosts(updated);
     toast.success("Post deleted");
   };
