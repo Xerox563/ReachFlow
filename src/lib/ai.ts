@@ -276,33 +276,57 @@ export async function generateComment({
                       'Encourage engagement and conversation';
 
   const prompt = `
-    Generate a great LinkedIn comment for this post. ${goalPrompt}.
+    You are a LinkedIn engagement expert. Generate 3 different, high-quality comments for the following post.
+    The goal of the comments is: ${goalPrompt}.
     
     Post Content:
     ${postContent}
     
-    Keep it authentic, 2-4 sentences.
+    Requirements:
+    1. Each comment should be unique.
+    2. Keep them professional yet conversational.
+    3. Include a mix of praise, insightful questions, and personal perspective.
+    4. Format the output as a JSON array of 3 strings.
+    
+    Example output: ["comment 1", "comment 2", "comment 3"]
   `;
 
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "HTTP-Referer": process.env.SITE_URL || "http://localhost:3000",
-      "X-Title": process.env.SITE_NAME || "ReachFlow",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: model,
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-    }),
-  });
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "HTTP-Referer": process.env.SITE_URL || "http://localhost:3000",
+        "X-Title": process.env.SITE_NAME || "ReachFlow",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: [
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+      }),
+    });
 
-  const data = await response.json();
-  return data.choices[0].message.content;
+    const data = await response.json();
+    const text = data.choices[0].message.content;
+    
+    try {
+      const parsed = JSON.parse(text.substring(text.indexOf('['), text.lastIndexOf(']') + 1));
+      if (Array.isArray(parsed)) return parsed;
+    } catch (e) {
+      return text.split('\n').filter((h: string) => h.trim().length > 10).slice(0, 3);
+    }
+    return [text];
+  } catch (error) {
+    console.error("Error generating comment:", error);
+    return [
+      "That's a great perspective! Thanks for sharing.",
+      "Really insightful post, thanks for the value!",
+      "Love this! Definitely something to think about."
+    ];
+  }
 }

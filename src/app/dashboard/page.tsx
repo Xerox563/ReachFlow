@@ -72,7 +72,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ReferencePost, SavedPost, PostVariation } from "@/types";
+import { ReferencePost, SavedPost, PostVariation, VoiceSample, CalendarEvent, Category } from "@/types";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 
@@ -140,15 +140,17 @@ export default function Dashboard() {
   const [librarySearch, setLibrarySearch] = useState("");
   const [libraryFilter, setLibraryFilter] = useState<string>("all");
   const [showAddLibraryModal, setShowAddLibraryModal] = useState(false);
+  const [libraryPosts, setLibraryPosts] = useState<ReferencePost[]>([]);
 
   // Comment Generator State
   const [postToComment, setPostToComment] = useState("");
   const [commentGoal, setCommentGoal] = useState<
     "network" | "engage" | "insightful"
   >("engage");
-  const [generatedComment, setGeneratedComment] = useState("");
+  const [generatedComments, setGeneratedComments] = useState<string[]>([]);
+  const [isGeneratingComment, setIsGeneratingComment] = useState(false);
 
-  const steps = ["Topic", "Style", "Hook", "Generate", "Edit"];
+  const steps = ["Topic", "Style", "Hook", "History", "Calendar", "Voice", "Library", "Comment"];
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -397,55 +399,6 @@ export default function Dashboard() {
     toast.success("Logged out!");
   };
 
-  const saveVoiceSample = async () => {
-    if (newSample.trim()) {
-      if (isSupabaseConfigured && user?.id) {
-        const { error } = await supabase.from("voices").insert([
-          {
-            user_id: user.id,
-            content: newSample.trim(),
-          },
-        ]);
-
-        if (error) {
-          toast.error("Failed to save voice sample");
-          return;
-        }
-      } else {
-        // Demo mode - localStorage
-        const updated = [...voiceSamples, newSample.trim()];
-        localStorage.setItem("reachflow_voice", JSON.stringify(updated));
-      }
-
-      setVoiceSamples([...voiceSamples, newSample.trim()]);
-      setNewSample("");
-      toast.success("Voice sample saved!");
-    }
-  };
-
-  const removeVoiceSample = async (index: number) => {
-    const sampleContent = voiceSamples[index];
-    const updated = voiceSamples.filter((_, i) => i !== index);
-    
-    if (isSupabaseConfigured && user?.id) {
-      const { error } = await supabase
-        .from("voices")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("content", sampleContent);
-
-      if (error) {
-        toast.error("Failed to remove voice sample");
-        return;
-      }
-    } else {
-      // Demo mode - localStorage
-      localStorage.setItem("reachflow_voice", JSON.stringify(updated));
-    }
-
-    setVoiceSamples(updated);
-  };
-
   const addKeyPoint = () => setKeyPoints([...keyPoints, ""]);
   const updateKeyPoint = (index: number, val: string) => {
     const newPoints = [...keyPoints];
@@ -584,7 +537,7 @@ export default function Dashboard() {
       toast.error("Please paste a post first");
       return;
     }
-    setIsGenerating(true);
+    setIsGeneratingComment(true);
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
@@ -597,12 +550,16 @@ export default function Dashboard() {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      setGeneratedComment(data.result);
-      toast.success("Comment generated!");
+      if (data.comments) {
+        setGeneratedComments(data.comments);
+        toast.success("Comments generated!");
+      } else {
+        throw new Error("Failed to generate comments");
+      }
     } catch (error) {
       toast.error("Failed to generate comment");
     } finally {
-      setIsGenerating(false);
+      setIsGeneratingComment(false);
     }
   };
 
@@ -2255,8 +2212,8 @@ export default function Dashboard() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {(() => {
-                    const posts = libraryPosts.length > 0 ? libraryPosts : styles;
-                    const filtered = posts.filter(p => {
+                    const postsList = libraryPosts.length > 0 ? libraryPosts : styles;
+                    const filtered = postsList.filter(p => {
                       const matchesSearch = 
                         p.content.toLowerCase().includes(librarySearch.toLowerCase()) ||
                         (p.author && p.author.toLowerCase().includes(librarySearch.toLowerCase()));
@@ -2472,10 +2429,10 @@ export default function Dashboard() {
                         </div>
                         <Button
                           onClick={generateComment}
-                          disabled={!postToComment || isGenerating}
+                          disabled={!postToComment || isGeneratingComment}
                           className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg h-10 font-bold text-sm shadow-lg shadow-orange-500/20 transition-all active:scale-[0.98]"
                         >
-                          {isGenerating ? (
+                          {isGeneratingComment ? (
                             <>
                               <Sparkles className="w-4 h-4 mr-2 animate-spin" />
                               Analyzing...
@@ -2496,51 +2453,81 @@ export default function Dashboard() {
                       <CardHeader className="pb-3 border-b border-gray-50 dark:border-gray-800 flex flex-row items-center justify-between">
                         <CardTitle className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Generated Comments</CardTitle>
                         <div className="flex items-center gap-1.5">
-                          <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold bg-orange-500 text-white rounded-md">Insightful</Button>
-                          <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">Networking</Button>
-                          <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">Supportive</Button>
-                          <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">Question</Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className={`h-7 px-2 text-[10px] font-bold rounded-md transition-colors ${commentGoal === 'insightful' ? 'bg-orange-500 text-white' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                            onClick={() => setCommentGoal('insightful')}
+                          >
+                            Insightful
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className={`h-7 px-2 text-[10px] font-bold rounded-md transition-colors ${commentGoal === 'network' ? 'bg-orange-500 text-white' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                            onClick={() => setCommentGoal('network')}
+                          >
+                            Networking
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className={`h-7 px-2 text-[10px] font-bold rounded-md transition-colors ${commentGoal === 'engage' ? 'bg-orange-500 text-white' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                            onClick={() => setCommentGoal('engage')}
+                          >
+                            Engaging
+                          </Button>
                         </div>
                       </CardHeader>
                       <CardContent className="p-0 flex-1 overflow-auto">
                         <div className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                          {[
-                            "Congrats on the launch! 12 months of hard work always shows. Can't wait to see the impact it creates for your users.",
-                            "Love seeing teams bringing ideas to life! What's been the most challenging part of this journey?",
-                            "Huge congratulations! The best feeling is when your users truly love what you've built. Wishing you all the success!",
-                          ].map((comment, i) => (
-                            <div key={i} className="p-6 space-y-4 group hover:bg-gray-50/30 dark:hover:bg-gray-800/20 transition-colors">
-                              <div className="flex items-start gap-4">
-                                <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
-                                  <MessageSquare className="w-4 h-4 text-gray-400" />
-                                </div>
-                                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{comment}</p>
-                              </div>
-                              <div className="flex items-center justify-between pl-12">
-                                <div className="flex items-center gap-3">
-                                  <button className="text-gray-400 hover:text-red-500 transition-colors"><Heart className="w-4 h-4" /></button>
-                                  <button className="text-gray-400 hover:text-orange-500 transition-colors"><ThumbsUp className="w-4 h-4" /></button>
-                                  <button className="text-gray-400 hover:text-gray-600 transition-colors"><ThumbsDown className="w-4 h-4" /></button>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-orange-500" onClick={() => copyToClipboard(comment)}>
-                                    <Copy className="w-4 h-4" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-orange-500">
-                                    <Bookmark className="w-4 h-4" />
-                                  </Button>
-                                </div>
-                              </div>
+                          {generatedComments.length === 0 ? (
+                            <div className="p-12 text-center text-gray-500 dark:text-gray-400 italic">
+                              Paste a post content and click "Analyze Post" to generate comments.
                             </div>
-                          ))}
+                          ) : (
+                            generatedComments.map((comment, i) => (
+                              <div key={i} className="p-6 space-y-4 group hover:bg-gray-50/30 dark:hover:bg-gray-800/20 transition-colors">
+                                <div className="flex items-start gap-4">
+                                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                                    <MessageSquare className="w-4 h-4 text-gray-400" />
+                                  </div>
+                                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{comment}</p>
+                                </div>
+                                <div className="flex items-center justify-between pl-12">
+                                  <div className="flex items-center gap-3">
+                                    <button className="text-gray-400 hover:text-red-500 transition-colors"><Heart className="w-4 h-4" /></button>
+                                    <button className="text-gray-400 hover:text-orange-500 transition-colors"><ThumbsUp className="w-4 h-4" /></button>
+                                    <button className="text-gray-400 hover:text-gray-600 transition-colors"><ThumbsDown className="w-4 h-4" /></button>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-orange-500" onClick={() => copyToClipboard(comment)}>
+                                      <Copy className="w-4 h-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-orange-500">
+                                      <Bookmark className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
                         </div>
                       </CardContent>
-                      <div className="p-4 border-t border-gray-50 dark:border-gray-800 flex justify-center">
-                        <Button variant="ghost" size="sm" className="text-[11px] font-bold text-gray-400 hover:text-orange-500 uppercase tracking-widest">
-                          <RefreshCw className="w-3.5 h-3.5 mr-2" />
-                          Generate More
-                        </Button>
-                      </div>
+                      {generatedComments.length > 0 && (
+                        <div className="p-4 border-t border-gray-50 dark:border-gray-800 flex justify-center">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-[11px] font-bold text-gray-400 hover:text-orange-500 uppercase tracking-widest"
+                            onClick={generateComment}
+                            disabled={isGeneratingComment}
+                          >
+                            <RefreshCw className={`w-3.5 h-3.5 mr-2 ${isGeneratingComment ? 'animate-spin' : ''}`} />
+                            Generate More
+                          </Button>
+                        </div>
+                      )}
                     </Card>
                   </div>
                 </div>

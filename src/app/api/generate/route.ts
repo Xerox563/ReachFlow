@@ -27,8 +27,9 @@ export async function POST(request: Request) {
         result = await editPost(params);
         break;
       case 'comment':
-        result = await generateComment(params);
-        break;
+          const { postContent, goal } = params;
+          const comments = await generateComment({ postContent, goal });
+          return NextResponse.json({ comments });
       default:
         throw new Error('Invalid generation type');
     }
