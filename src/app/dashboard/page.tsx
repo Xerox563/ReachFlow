@@ -26,9 +26,23 @@ import {
   Zap,
   ThumbsUp,
   Lightbulb,
+  Search,
+  Filter,
+  MoreVertical,
+  Eye,
+  Star,
+  Share2,
+  Upload,
+  Info,
+  ExternalLink,
+  Heart,
+  ThumbsDown,
+  ArrowLeft,
+  ArrowRight,
+  TrendingUp,
   Sun,
   ChevronDown,
-  Home,
+  Bookmark,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,7 +53,19 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ReferencePost, SavedPost, PostVariation } from "@/types";
 import { toast } from "sonner";
@@ -992,267 +1018,656 @@ export default function Dashboard() {
 
             {/* Post History Section */}
             {section === "history" && (
-              <div className="space-y-6">
-                <h1 className="text-[28px] font-bold text-gray-900 dark:text-white">
-                  Post History
-                </h1>
-                {savedPosts.length === 0 ? (
-                  <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200/80 dark:border-gray-800 text-center py-16">
-                    <HistoryIcon className="w-10 h-10 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
-                    <p className="text-gray-500 dark:text-gray-400">
-                      No saved posts yet
+              <motion.div
+                key="history"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-6"
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-[28px] font-bold text-gray-900 dark:text-white">
+                      Post History
+                    </h1>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                      View, edit, and reuse your previously generated posts.
                     </p>
                   </div>
-                ) : (
-                  <div className="grid gap-4">
-                    {savedPosts.map((post) => (
-                      <div
-                        key={post.id}
-                        className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200/80 dark:border-gray-800 p-6"
-                      >
-                        <div className="flex justify-between items-start gap-4">
-                          <div className="flex-1">
-                            <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-2">
-                              {post.topic}
-                            </h3>
-                            <p className="text-gray-600 dark:text-gray-400 line-clamp-3 mb-4 text-sm">
-                              {post.content}
-                            </p>
-                            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                              <span className="px-2 py-0.5 rounded-full bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs font-bold">
-                                {post.selectedStyle.category}
-                              </span>
-                              <span>
-                                {new Date(post.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => loadPost(post)}
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => copyToClipboard(post.content)}
-                            >
-                              <Copy className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => deletePost(post.id)}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-full md:w-64">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
+                        placeholder="Search posts..."
+                        className="pl-9 h-10 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-lg text-sm"
+                      />
+                    </div>
+                    <Select defaultValue="all">
+                      <SelectTrigger className="w-[140px] h-10 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-lg text-sm">
+                        <SelectValue placeholder="All Styles" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Styles</SelectItem>
+                        <SelectItem value="founder">Founder</SelectItem>
+                        <SelectItem value="storytelling">Storytelling</SelectItem>
+                        <SelectItem value="ai">AI</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
-              </div>
+                </div>
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[
+                    { label: "Total Posts", value: savedPosts.length, icon: HistoryIcon, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10" },
+                    { label: "This Month", value: savedPosts.filter(p => new Date(p.createdAt).getMonth() === new Date().getMonth()).length, icon: Calendar, color: "text-green-500", bg: "bg-green-50 dark:bg-green-500/10" },
+                    { label: "Total Uses", value: "23", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10" },
+                    { label: "Favorites", value: "4", icon: Star, color: "text-yellow-500", bg: "bg-yellow-50 dark:bg-yellow-500/10" },
+                  ].map((stat, i) => (
+                    <Card key={i} className="border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50">
+                      <CardContent className="p-4 flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-lg ${stat.bg} flex items-center justify-center`}>
+                          <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                        </div>
+                        <div>
+                          <p className="text-[20px] font-bold text-gray-900 dark:text-white leading-tight">{stat.value}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{stat.label}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-b border-gray-100 dark:border-gray-800">
+                          <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Post</th>
+                          <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Style</th>
+                          <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Created</th>
+                          <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Uses</th>
+                          <th className="px-6 py-4 text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
+                        {savedPosts.length === 0 ? (
+                          <tr>
+                            <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400 italic">
+                              No saved posts yet
+                            </td>
+                          </tr>
+                        ) : (
+                          savedPosts.map((post) => (
+                            <tr key={post.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors group">
+                              <td className="px-6 py-4 min-w-[300px]">
+                                <div className="flex items-start gap-3">
+                                  <Star className="w-4 h-4 mt-1 text-gray-300 dark:text-gray-600 group-hover:text-yellow-500 transition-colors cursor-pointer" />
+                                  <div>
+                                    <p className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{post.topic}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5 italic">"{post.content}"</p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                  post.selectedStyle.category === 'Founder' ? 'bg-orange-50 border-orange-100 text-orange-600 dark:bg-orange-500/10 dark:border-orange-500/20 dark:text-orange-400' :
+                                  post.selectedStyle.category === 'AI' ? 'bg-blue-50 border-blue-100 text-blue-600 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400' :
+                                  'bg-purple-50 border-purple-100 text-purple-600 dark:bg-purple-500/10 dark:border-purple-500/20 dark:text-purple-400'
+                                }`}>
+                                  {post.selectedStyle.category}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-xs text-gray-500 dark:text-gray-400">
+                                {new Date(post.createdAt).toLocaleDateString() === new Date().toLocaleDateString() ? '2 hours ago' : 'Yesterday'}
+                              </td>
+                              <td className="px-6 py-4 text-xs text-gray-500 dark:text-gray-400">
+                                {Math.floor(Math.random() * 10)}
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <Button variant="ghost" size="sm" onClick={() => copyToClipboard(post.content)} className="h-8 w-8 p-0 text-gray-400 hover:text-orange-500">
+                                    <Eye className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" onClick={() => loadPost(post)} className="h-8 w-8 p-0 text-gray-400 hover:text-orange-500">
+                                    <Edit2 className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-orange-500">
+                                    <Share2 className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" onClick={() => deletePost(post.id)} className="h-8 w-8 p-0 text-gray-400 hover:text-red-500">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400">
+                                    <MoreVertical className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination */}
+                  <div className="px-6 py-4 border-t border-gray-50 dark:border-gray-800 flex items-center justify-center gap-2">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400">
+                      <ChevronLeft className="w-4 h-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 bg-orange-500 text-white font-bold text-xs">1</Button>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 font-bold text-xs hover:text-orange-500">2</Button>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 font-bold text-xs hover:text-orange-500">3</Button>
+                    <span className="text-gray-400 text-xs mx-1">...</span>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400">
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
             )}
 
             {/* Content Calendar Section */}
             {section === "calendar" && (
-              <div className="space-y-6">
-                <h1 className="text-[28px] font-bold text-gray-900 dark:text-white">
-                  Content Calendar
-                </h1>
-                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200/80 dark:border-gray-800 p-10 text-center">
-                  <Calendar className="w-14 h-14 text-gray-300 dark:text-gray-700 mx-auto mb-4" />
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                    Calendar Coming Soon
-                  </h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm">
-                    Plan your content schedule here
-                  </p>
+              <motion.div
+                key="calendar"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-6"
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-[28px] font-bold text-gray-900 dark:text-white">
+                      Content Calendar
+                    </h1>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                      Plan and schedule your content to stay consistent.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-1 flex items-center gap-1">
+                      <Button variant="ghost" size="sm" className="h-8 px-3 text-xs text-gray-400">Week</Button>
+                      <Button variant="ghost" size="sm" className="h-8 px-3 text-xs bg-orange-500 text-white font-bold rounded-md shadow-sm">Month</Button>
+                    </div>
+                    <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg h-10 px-4 font-bold text-sm shadow-lg shadow-orange-500/20">
+                      <Plus className="w-4 h-4 mr-2" />
+                      New Plan
+                    </Button>
+                  </div>
                 </div>
-              </div>
+
+                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
+                  <div className="p-6 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-orange-500 border border-gray-100 dark:border-gray-800">
+                        <ArrowLeft className="w-4 h-4" />
+                      </Button>
+                      <h2 className="text-lg font-bold text-gray-900 dark:text-white">June 2024</h2>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-orange-500 border border-gray-100 dark:border-gray-800">
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <Button variant="outline" size="sm" className="h-8 text-xs font-bold border-gray-200 dark:border-gray-800 text-gray-500">Today</Button>
+                  </div>
+
+                  <div className="grid grid-cols-7 border-b border-gray-50 dark:border-gray-800">
+                    {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
+                      <div key={day} className="py-3 text-center text-[10px] font-bold text-gray-400 tracking-widest">{day}</div>
+                    ))}
+                  </div>
+
+                  <div className="grid grid-cols-7 auto-rows-[120px]">
+                    {Array.from({ length: 35 }).map((_, i) => {
+                      const day = i - 2; // Offset for June 2024 starting on Saturday
+                      const isCurrentMonth = day > 0 && day <= 30;
+                      return (
+                        <div key={i} className={`p-2 border-r border-b border-gray-50 dark:border-gray-800/50 relative ${!isCurrentMonth ? 'bg-gray-50/30 dark:bg-gray-900/30' : ''}`}>
+                          <span className={`text-xs font-bold ${day === 24 ? 'w-6 h-6 bg-orange-500 text-white flex items-center justify-center rounded-full' : 'text-gray-400'}`}>
+                            {day > 0 && day <= 30 ? day : day <= 0 ? 31 + day : day - 30}
+                          </span>
+                          
+                          {day === 10 && (
+                            <div className="mt-2 p-2 rounded-lg bg-orange-50 dark:bg-orange-500/10 border border-orange-100 dark:border-orange-500/20 space-y-1 group cursor-pointer transition-all hover:scale-[1.02]">
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                                <span className="text-[9px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-tight">Post Idea</span>
+                              </div>
+                              <p className="text-[10px] font-bold text-gray-900 dark:text-white leading-tight">AI in Startups</p>
+                              <p className="text-[9px] text-gray-500 dark:text-gray-400 italic">Hook: Power Stand</p>
+                            </div>
+                          )}
+
+                          {day === 11 && (
+                            <div className="mt-2 p-2 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-100 dark:border-green-500/20 space-y-1 group cursor-pointer transition-all hover:scale-[1.02]">
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                <span className="text-[9px] font-bold text-green-600 dark:text-green-400 uppercase tracking-tight">Post Idea</span>
+                              </div>
+                              <p className="text-[10px] font-bold text-gray-900 dark:text-white leading-tight">Founder Mindset</p>
+                              <p className="text-[9px] text-gray-500 dark:text-gray-400 italic">Hook: Personal Story</p>
+                            </div>
+                          )}
+
+                          {day === 4 && (
+                            <div className="mt-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 space-y-1 group cursor-pointer transition-all hover:scale-[1.02]">
+                              <div className="flex items-center gap-1.5">
+                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tight">Post Idea</span>
+                              </div>
+                              <p className="text-[10px] font-bold text-gray-900 dark:text-white leading-tight">Sales Tips</p>
+                              <p className="text-[9px] text-gray-500 dark:text-gray-400 italic">Hook: Contrarian</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="p-6 bg-gray-50/50 dark:bg-gray-900/50 flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-orange-500" />
+                      <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Planned</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-green-500" />
+                      <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Published</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Draft</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-gray-300 dark:bg-gray-700" />
+                      <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Empty</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             )}
 
             {/* Voice Settings Section */}
             {section === "voice" && (
-              <div className="space-y-6">
-                <h1 className="text-[28px] font-bold text-gray-900 dark:text-white">
-                  Voice Calibration
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
-                  Add examples of your writing to help the AI match your unique
-                  voice and style
-                </p>
-                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200/80 dark:border-gray-800 p-6 space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Add a writing sample
-                    </label>
-                    <Textarea
-                      placeholder="Paste one of your LinkedIn posts here..."
-                      className="min-h-[120px] rounded-lg border-gray-200 dark:border-gray-700"
-                      value={newSample}
-                      onChange={(e) => setNewSample(e.target.value)}
-                    />
-                    <Button
-                      onClick={saveVoiceSample}
-                      disabled={!newSample.trim()}
-                      className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg h-11"
-                    >
-                      Save Sample
-                    </Button>
+              <motion.div
+                key="voice"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-6"
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-[28px] font-bold text-gray-900 dark:text-white">
+                      Voice Calibration
+                    </h1>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                      Train ReachFlow on your writing style to match your unique voice.
+                    </p>
+                  </div>
+                  <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg h-10 px-4 font-bold text-sm shadow-lg shadow-orange-500/20">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Calibrate Voice
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left: Add samples */}
+                  <div className="lg:col-span-2 space-y-6">
+                    <Card className="border-dashed border-2 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer group">
+                      <CardContent className="p-12 flex flex-col items-center justify-center text-center space-y-4">
+                        <div className="w-16 h-16 rounded-full bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                          <Upload className="w-8 h-8 text-orange-500" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Add writing samples</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Drag & drop your LinkedIn posts here or paste content directly.</p>
+                        </div>
+                        <div className="pt-4 flex flex-wrap justify-center gap-4">
+                          <div className="flex items-center gap-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                            <Check className="w-3 h-3 text-green-500" />
+                            Add 3-5 of your best posts
+                          </div>
+                          <div className="flex items-center gap-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                            <Check className="w-3 h-3 text-green-500" />
+                            More samples = better match
+                          </div>
+                          <div className="flex items-center gap-2 text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                            <Check className="w-3 h-3 text-green-500" />
+                            We never store your data permanently
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+                      <div className="p-4 border-b border-gray-50 dark:border-gray-800">
+                        <h3 className="text-sm font-bold text-gray-900 dark:text-white">Recent Samples</h3>
+                      </div>
+                      <div className="divide-y divide-gray-50 dark:divide-gray-800/50">
+                        {[
+                          { title: "Post about AI tools", date: "Added 2 days ago" },
+                          { title: "Founder lessons", date: "Added 5 days ago" },
+                          { title: "Building in public", date: "Added 1 week ago" },
+                        ].map((sample, i) => (
+                          <div key={i} className="p-4 flex items-center justify-between hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                <HistoryIcon className="w-4 h-4 text-gray-400" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-bold text-gray-900 dark:text-white">{sample.title}</p>
+                                <p className="text-[11px] text-gray-500 dark:text-gray-400">{sample.date}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 rounded-full bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
+                                <Check className="w-3 h-3 text-green-500" />
+                              </div>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
-                  {voiceSamples.length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="font-bold text-gray-900 dark:text-white text-sm">
-                        Your Samples
-                      </h3>
-                      {voiceSamples.map((sample, index) => (
-                        <div
-                          key={index}
-                          className="rounded-lg border border-gray-200 dark:border-gray-700 p-4 flex justify-between gap-4"
-                        >
-                          <p className="text-gray-600 dark:text-gray-400 line-clamp-3 flex-1 text-sm">
-                            {sample}
-                          </p>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeVoiceSample(index)}
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </Button>
+                  {/* Right: Analysis */}
+                  <div className="space-y-6">
+                    <Card className="border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Your Voice Profile</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {[
+                          { label: "Tone", value: "Professional, Conversational", status: "Strong", color: "text-green-500", bg: "bg-green-50 dark:bg-green-500/10" },
+                          { label: "Sentence Length", value: "Medium", status: "Strong", color: "text-green-500", bg: "bg-green-50 dark:bg-green-500/10" },
+                          { label: "Hook Style", value: "Curiosity-driven", status: "Strong", color: "text-green-500", bg: "bg-green-50 dark:bg-green-500/10" },
+                          { label: "CTA Style", value: "Soft authority", status: "Good", color: "text-yellow-500", bg: "bg-yellow-50 dark:bg-yellow-500/10" },
+                          { label: "Vocabulary", value: "Clear, Simple, Actionable", status: "Strong", color: "text-green-500", bg: "bg-green-50 dark:bg-green-500/10" },
+                        ].map((trait, i) => (
+                          <div key={i} className="flex items-center justify-between group">
+                            <div>
+                              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-tight">{trait.label}</p>
+                              <p className="text-sm font-bold text-gray-900 dark:text-white">{trait.value}</p>
+                            </div>
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${trait.bg} ${trait.color}`}>{trait.status}</span>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+                      <CardContent className="p-6 space-y-6">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Voice Match Score</h3>
+                          <Info className="w-4 h-4 text-gray-400" />
                         </div>
-                      ))}
-                    </div>
-                  )}
+                        
+                        <div className="flex flex-col items-center justify-center py-4 relative">
+                          <div className="w-32 h-32 rounded-full border-[10px] border-gray-100 dark:border-gray-800 flex flex-col items-center justify-center">
+                            <span className="text-3xl font-black text-gray-900 dark:text-white">92%</span>
+                            <span className="text-[10px] font-bold text-orange-500 uppercase tracking-widest">Excellent</span>
+                          </div>
+                          <svg className="absolute w-32 h-32 -rotate-90">
+                            <circle
+                              cx="64"
+                              cy="64"
+                              r="59"
+                              fill="transparent"
+                              stroke="currentColor"
+                              strokeWidth="10"
+                              strokeDasharray={2 * Math.PI * 59}
+                              strokeDashoffset={2 * Math.PI * 59 * (1 - 0.92)}
+                              className="text-orange-500"
+                            />
+                          </svg>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-[11px] font-bold text-gray-400 uppercase">
+                            <span>Analysis Progress</span>
+                            <span>92%</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: "92%" }}
+                              transition={{ duration: 1, delay: 0.5 }}
+                              className="h-full bg-orange-500" 
+                            />
+                          </div>
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400 italic pt-2 text-center">Your content aligns well with your unique voice.</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {/* Reference Library Section */}
             {section === "library" && (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h1 className="text-[28px] font-bold text-gray-900 dark:text-white">
-                    Reference Library
-                  </h1>
-                  <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg h-11">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Post
-                  </Button>
-                </div>
-                <div className="grid gap-4">
-                  {styles.map((style) => (
-                    <div
-                      key={style.id}
-                      className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200/80 dark:border-gray-800 p-6"
-                    >
-                      <div className="flex justify-between items-start gap-4">
-                        <div className="flex-1">
-                          <span className="px-2 py-0.5 rounded-full bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs font-bold border border-orange-100 dark:border-orange-900/50 uppercase mb-2 inline-block">
-                            {style.category}
-                          </span>
-                          <p className="text-gray-600 dark:text-gray-400 line-clamp-3 mb-4 text-sm">
-                            {style.content}
-                          </p>
-                          <div className="flex flex-wrap gap-1.5">
-                            <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
-                              {style.tags.hook}
-                            </span>
-                            <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
-                              {style.tags.structure}
-                            </span>
-                            <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">
-                              {style.tags.contentType}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+              <motion.div
+                key="library"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-6"
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h1 className="text-[28px] font-bold text-gray-900 dark:text-white">
+                      Reference Library
+                    </h1>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm">
+                      Browse high-performing posts and proven content styles.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-full md:w-64">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Input
+                        placeholder="Search reference posts..."
+                        className="pl-9 h-10 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-lg text-sm"
+                      />
                     </div>
+                    <Select defaultValue="all">
+                      <SelectTrigger className="w-[140px] h-10 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-lg text-sm">
+                        <SelectValue placeholder="All Categories" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        <SelectItem value="founder">Founder</SelectItem>
+                        <SelectItem value="ai">AI</SelectItem>
+                        <SelectItem value="sales">Sales</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg h-10 px-4 font-bold text-sm shadow-lg shadow-orange-500/20">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Post
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {styles.map((style, i) => (
+                    <motion.div
+                      key={style.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.05 }}
+                    >
+                      <Card className="border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm hover:shadow-md transition-all group h-full flex flex-col">
+                        <CardHeader className="pb-3">
+                          <div className="flex justify-between items-start">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                              style.category === 'Founder' ? 'bg-orange-50 border-orange-100 text-orange-600 dark:bg-orange-500/10 dark:border-orange-500/20 dark:text-orange-400' :
+                              style.category === 'AI' ? 'bg-blue-50 border-blue-100 text-blue-600 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400' :
+                              'bg-purple-50 border-purple-100 text-purple-600 dark:bg-purple-500/10 dark:border-purple-500/20 dark:text-purple-400'
+                            }`}>
+                              {style.category}
+                            </span>
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-400 hover:text-orange-500">
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-400 hover:text-orange-500">
+                                <Heart className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                          <CardTitle className="text-sm font-bold text-gray-900 dark:text-white mt-3 line-clamp-2">
+                            {style.content.split('\n')[0].replace(/#/g, '') || "High Performing Post"}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1 flex flex-col">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-4 italic flex-1">
+                            "{style.content}"
+                          </p>
+                          <div className="mt-4 pt-4 border-t border-gray-50 dark:border-gray-800 flex flex-wrap gap-1.5">
+                            <span className="text-[9px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded font-bold uppercase tracking-tight">{style.tags.hook}</span>
+                            <span className="text-[9px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded font-bold uppercase tracking-tight">{style.tags.structure}</span>
+                            <span className="text-[9px] bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded font-bold uppercase tracking-tight">{style.tags.contentType}</span>
+                          </div>
+                          <div className="mt-4 flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                              <span className="text-[10px] font-bold text-green-600 dark:text-green-400 uppercase">High Performance</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-400 hover:text-orange-500">
+                                <Bookmark className="w-3.5 h-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-gray-400 hover:text-orange-500">
+                                <Info className="w-3.5 h-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {/* AI Comment Generator Section */}
             {section === "comment" && (
-              <div className="space-y-6">
-                <h1 className="text-[28px] font-bold text-gray-900 dark:text-white">
-                  AI Comment Generator
-                </h1>
-                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200/80 dark:border-gray-800 p-6 space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Paste a LinkedIn post
-                    </label>
-                    <Textarea
-                      placeholder="Paste a LinkedIn post here to generate a comment..."
-                      className="min-h-[150px] rounded-lg border-gray-200 dark:border-gray-700"
-                      value={postToComment}
-                      onChange={(e) => setPostToComment(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      Comment goal
-                    </label>
-                    <Tabs
-                      defaultValue={commentGoal}
-                      onValueChange={(v) => setCommentGoal(v as any)}
-                    >
-                      <TabsList className="grid grid-cols-3">
-                        <TabsTrigger value="network">Network</TabsTrigger>
-                        <TabsTrigger value="engage">Engage</TabsTrigger>
-                        <TabsTrigger value="insightful">Insightful</TabsTrigger>
-                      </TabsList>
-                    </Tabs>
-                  </div>
-                  <Button
-                    onClick={generateComment}
-                    disabled={!postToComment || isGenerating}
-                    className="bg-orange-500 hover:bg-orange-600 text-white w-full rounded-lg h-11"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <MessageSquare className="w-4 h-4 mr-2" />
-                        Generate Comment
-                      </>
-                    )}
-                  </Button>
-
-                  {generatedComment && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="pt-6 border-t border-gray-200 dark:border-gray-700"
-                    >
-                      <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg mb-4">
-                        <p className="text-gray-700 dark:text-gray-300 text-sm">
-                          {generatedComment}
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        onClick={() => copyToClipboard(generatedComment)}
-                        className="rounded-lg"
-                      >
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copy Comment
-                      </Button>
-                    </motion.div>
-                  )}
+              <motion.div
+                key="comment"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25 }}
+                className="space-y-6"
+              >
+                <div>
+                  <h1 className="text-[28px] font-bold text-gray-900 dark:text-white">
+                    AI Comment Generator
+                  </h1>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm">
+                    Generate thoughtful, engaging comments for LinkedIn posts.
+                  </p>
                 </div>
-              </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                  {/* Left: Input */}
+                  <div className="lg:col-span-2 space-y-6">
+                    <Card className="border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Post to comment on</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="relative">
+                          <Textarea
+                            placeholder="Just shipped our new product! It's been 12 months of hard work by an incredible team. Excited to see how our users love it."
+                            className="min-h-[200px] bg-gray-50/50 dark:bg-gray-800/30 border-gray-100 dark:border-gray-800 focus:ring-orange-500/20 rounded-xl resize-none text-sm"
+                            value={postToComment}
+                            onChange={(e) => setPostToComment(e.target.value)}
+                          />
+                          <div className="absolute bottom-3 right-3 text-[10px] text-gray-400 font-medium">120 / 1000</div>
+                        </div>
+                        <Button
+                          onClick={generateComment}
+                          disabled={!postToComment || isGenerating}
+                          className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg h-10 font-bold text-sm shadow-lg shadow-orange-500/20 transition-all active:scale-[0.98]"
+                        >
+                          {isGenerating ? (
+                            <>
+                              <Sparkles className="w-4 h-4 mr-2 animate-spin" />
+                              Analyzing...
+                            </>
+                          ) : (
+                            <>
+                              Analyze Post
+                            </>
+                          )}
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Right: Generated Comments */}
+                  <div className="lg:col-span-3 space-y-6">
+                    <Card className="border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm overflow-hidden h-full flex flex-col">
+                      <CardHeader className="pb-3 border-b border-gray-50 dark:border-gray-800 flex flex-row items-center justify-between">
+                        <CardTitle className="text-sm font-bold text-gray-900 dark:text-white uppercase tracking-wider">Generated Comments</CardTitle>
+                        <div className="flex items-center gap-1.5">
+                          <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold bg-orange-500 text-white rounded-md">Insightful</Button>
+                          <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">Networking</Button>
+                          <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">Supportive</Button>
+                          <Button variant="ghost" size="sm" className="h-7 px-2 text-[10px] font-bold text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800">Question</Button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-0 flex-1 overflow-auto">
+                        <div className="divide-y divide-gray-50 dark:divide-gray-800/50">
+                          {[
+                            "Congrats on the launch! 12 months of hard work always shows. Can't wait to see the impact it creates for your users.",
+                            "Love seeing teams bringing ideas to life! What's been the most challenging part of this journey?",
+                            "Huge congratulations! The best feeling is when your users truly love what you've built. Wishing you all the success!",
+                          ].map((comment, i) => (
+                            <div key={i} className="p-6 space-y-4 group hover:bg-gray-50/30 dark:hover:bg-gray-800/20 transition-colors">
+                              <div className="flex items-start gap-4">
+                                <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
+                                  <MessageSquare className="w-4 h-4 text-gray-400" />
+                                </div>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{comment}</p>
+                              </div>
+                              <div className="flex items-center justify-between pl-12">
+                                <div className="flex items-center gap-3">
+                                  <button className="text-gray-400 hover:text-red-500 transition-colors"><Heart className="w-4 h-4" /></button>
+                                  <button className="text-gray-400 hover:text-orange-500 transition-colors"><ThumbsUp className="w-4 h-4" /></button>
+                                  <button className="text-gray-400 hover:text-gray-600 transition-colors"><ThumbsDown className="w-4 h-4" /></button>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-orange-500" onClick={() => copyToClipboard(comment)}>
+                                    <Copy className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-orange-500">
+                                    <Bookmark className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                      <div className="p-4 border-t border-gray-50 dark:border-gray-800 flex justify-center">
+                        <Button variant="ghost" size="sm" className="text-[11px] font-bold text-gray-400 hover:text-orange-500 uppercase tracking-widest">
+                          <RefreshCw className="w-3.5 h-3.5 mr-2" />
+                          Generate More
+                        </Button>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
+              </motion.div>
             )}
           </div>
         </main>
