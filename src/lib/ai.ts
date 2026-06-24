@@ -1,5 +1,28 @@
 import { ReferencePost, Category } from "@/types";
 
+// Helper function with retries
+async function fetchWithRetry(
+  url: string, 
+  options: RequestInit, 
+  retries = 3, 
+  delay = 1000
+): Promise<Response> {
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  } catch (error) {
+    if (retries > 0) {
+      console.warn(`Retrying request (${retries} attempts left)...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return fetchWithRetry(url, options, retries - 1, delay * 2);
+    }
+    throw error;
+  }
+}
+
 export async function generateLinkedInPost({
   topic,
   keyPoints,
@@ -97,7 +120,7 @@ What's a problem you've been "working on" that you should actually understand fi
     OUTPUT: Only the LinkedIn post content.
   `;
 
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  const response = await fetchWithRetry("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
@@ -117,6 +140,9 @@ What's a problem you've been "working on" that you should actually understand fi
   });
 
   const data = await response.json();
+  if (!data.choices || !data.choices[0]?.message?.content) {
+    throw new Error("Invalid response from AI");
+  }
   return data.choices[0].message.content;
 }
 
@@ -155,7 +181,7 @@ export async function generateHooks({
     Output format: Each hook on a new line, prefixed with "- ". No extra text.
   `;
 
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  const response = await fetchWithRetry("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
@@ -175,6 +201,9 @@ export async function generateHooks({
   });
 
   const data = await response.json();
+  if (!data.choices || !data.choices[0]?.message?.content) {
+    throw new Error("Invalid response from AI");
+  }
   const hooksString = data.choices[0].message.content;
   return hooksString.split('\n').filter((h: string) => h.trim().startsWith('- ')).map((h: string) => h.replace(/^-\s*/, ''));
 }
@@ -210,7 +239,7 @@ export async function generateVariations({
     Output each variation clearly labeled with "STORY VERSION:", "PROFESSIONAL VERSION:", "ENGAGING VERSION:"
   `;
 
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  const response = await fetchWithRetry("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
@@ -230,6 +259,9 @@ export async function generateVariations({
   });
 
   const data = await response.json();
+  if (!data.choices || !data.choices[0]?.message?.content) {
+    throw new Error("Invalid response from AI");
+  }
   const resultText = data.choices[0].message.content;
   
   // Parse the variations
@@ -306,7 +338,7 @@ export async function editPost({
     ${content}
   `;
 
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+  const response = await fetchWithRetry("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
       "Authorization": `Bearer ${apiKey}`,
@@ -326,6 +358,9 @@ export async function editPost({
   });
 
   const data = await response.json();
+  if (!data.choices || !data.choices[0]?.message?.content) {
+    throw new Error("Invalid response from AI");
+  }
   return data.choices[0].message.content;
 }
 
@@ -348,62 +383,69 @@ export async function generateComment({
     ];
   }
 
-  const goalPrompt = goal === 'network' ? 'Focus on building a connection with the author' :
-                      goal === 'insightful' ? 'Share a thoughtful insight or perspective' :
-                      'Encourage engagement and conversation';
+  let goalPrompt = '';
+  switch(goal) {
+    case 'network':
+      goalPrompt = 'Networking-focused: Build a connection, mention common ground, suggest follow-up';
+      break;
+    case 'engage':
+      goalPrompt = 'Engagement-focused: Ask a follow-up question, encourage discussion';
+      break;
+    case 'insightful':
+      goalPrompt = 'Insightful: Add value, share a related thought or experience';
+      break;
+  }
 
   const prompt = `
-    You are a LinkedIn engagement expert. Generate 3 different, high-quality comments for the following post.
-    The goal of the comments is: ${goalPrompt}.
+    Read this LinkedIn post and generate 3 high-quality comments (${goalPrompt}):
     
-    Post Content:
+    POST CONTENT:
     ${postContent}
     
-    Requirements:
-    1. Each comment should be unique.
-    2. Keep them professional yet conversational.
-    3. Include a mix of praise, insightful questions, and personal perspective.
-    4. Format the output as a JSON array of 3 strings.
+    INSTRUCTIONS:
+    - Each comment should be 2-3 sentences
+    - Sound natural and authentic (not AI-generated)
+    - Add genuine value
+    - Match the tone of the post
+    - No hashtags or excessive emojis
     
-    Example output: ["comment 1", "comment 2", "comment 3"]
+    OUTPUT: 3 comments, each on a new line, labeled 1., 2., 3.
   `;
 
-  try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "HTTP-Referer": process.env.SITE_URL || "http://localhost:3000",
-        "X-Title": process.env.SITE_NAME || "ReachFlow",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          {
-            role: "user",
-            content: prompt,
-          },
-        ],
-      }),
-    });
+  const response = await fetchWithRetry("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "HTTP-Referer": process.env.SITE_URL || "http://localhost:3000",
+      "X-Title": process.env.SITE_NAME || "ReachFlow",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+    }),
+  });
 
-    const data = await response.json();
-    const text = data.choices[0].message.content;
-    
-    try {
-      const parsed = JSON.parse(text.substring(text.indexOf('['), text.lastIndexOf(']') + 1));
-      if (Array.isArray(parsed)) return parsed;
-    } catch (e) {
-      return text.split('\n').filter((h: string) => h.trim().length > 10).slice(0, 3);
-    }
-    return [text];
-  } catch (error) {
-    console.error("Error generating comment:", error);
-    return [
-      "That's a great perspective! Thanks for sharing.",
-      "Really insightful post, thanks for the value!",
-      "Love this! Definitely something to think about."
-    ];
+  const data = await response.json();
+  if (!data.choices || !data.choices[0]?.message?.content) {
+    throw new Error("Invalid response from AI");
   }
+  const commentsString = data.choices[0].message.content;
+  
+  // Parse the comments
+  const comments = commentsString
+    .split('\n')
+    .filter((line: string) => line.trim().match(/^\d\./))
+    .map((line: string) => line.replace(/^\d\.\s*/, '').trim());
+  
+  return comments.length > 0 ? comments : [
+    "That's a great perspective! Thanks for sharing.",
+    "Really insightful post, thanks for the value!",
+    "Love this! Definitely something to think about."
+  ];
 }
