@@ -31,6 +31,7 @@ export interface GeneratedPost {
   variations?: PostVariation;
   createdAt: string;
   isFavorite?: boolean;
+  uses?: number;
 }
 
 export interface SavedPost {
@@ -44,4 +45,6 @@ export interface SavedPost {
   selectedHook?: string;
   variations?: PostVariation;
   createdAt: string;
+  isFavorite?: boolean;
+  uses?: number;
 }

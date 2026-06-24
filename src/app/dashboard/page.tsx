@@ -127,6 +127,8 @@ export default function Dashboard() {
   const [savedPosts, setSavedPosts] = useState<SavedPost[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStyle, setFilterStyle] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 10;
 
   // Comment Generator State
   const [postToComment, setPostToComment] = useState("");
@@ -495,6 +497,8 @@ export default function Dashboard() {
         hookOptions,
         selectedHook,
         variations,
+        isFavorite: false,
+        uses: 1,
       };
 
       const { data, error } = await supabase
@@ -522,6 +526,8 @@ export default function Dashboard() {
         selectedHook,
         variations,
         createdAt: new Date().toISOString(),
+        isFavorite: false,
+        uses: 1,
       };
       const updated = [newPost, ...savedPosts];
       localStorage.setItem("reachflow_posts", JSON.stringify(updated));
@@ -553,6 +559,53 @@ export default function Dashboard() {
     setSavedPosts(updated);
     toast.success("Post deleted");
   };
+
+  const toggleFavorite = async (id: string) => {
+    const post = savedPosts.find(p => p.id === id);
+    if (!post) return;
+
+    const updatedFavorite = !post.isFavorite;
+    const updated = savedPosts.map(p => 
+      p.id === id ? { ...p, isFavorite: updatedFavorite } : p
+    );
+
+    if (isSupabaseConfigured && user?.id) {
+      const { error } = await supabase
+        .from("posts")
+        .update({ isFavorite: updatedFavorite })
+        .eq("id", id)
+        .eq("user_id", user.id);
+
+      if (error) {
+        toast.error("Failed to update favorite");
+        return;
+      }
+    } else {
+      // Demo mode
+      localStorage.setItem("reachflow_posts", JSON.stringify(updated));
+    }
+
+    setSavedPosts(updated);
+    toast.success(updatedFavorite ? "Added to favorites" : "Removed from favorites");
+  };
+
+  const filteredPosts = savedPosts.filter(post => {
+    const matchesSearch = 
+      post.topic.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.content.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesStyle = 
+      filterStyle === "all" || 
+      post.selectedStyle.category.toLowerCase() === filterStyle.toLowerCase();
+
+    return matchesSearch && matchesStyle;
+  });
+
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+  const paginatedPosts = filteredPosts.slice(
+    (currentPage - 1) * postsPerPage,
+    currentPage * postsPerPage
+  );
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -1359,10 +1412,12 @@ export default function Dashboard() {
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
                         placeholder="Search posts..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-9 h-10 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-lg text-sm"
                       />
                     </div>
-                    <Select defaultValue="all">
+                    <Select value={filterStyle} onValueChange={setFilterStyle}>
                       <SelectTrigger className="w-[140px] h-10 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 rounded-lg text-sm">
                         <SelectValue placeholder="All Styles" />
                       </SelectTrigger>
@@ -1380,9 +1435,9 @@ export default function Dashboard() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
                     { label: "Total Posts", value: savedPosts.length, icon: HistoryIcon, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10" },
-                    {label: "This Month", value: savedPosts.filter(p => p.createdAt && new Date(p.createdAt).getMonth() === new Date().getMonth()).length, icon: Calendar, color: "text-green-500", bg: "bg-green-50 dark:bg-green-500/10" },
-                    { label: "Total Uses", value: "23", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10" },
-                    { label: "Favorites", value: "4", icon: Star, color: "text-yellow-500", bg: "bg-yellow-50 dark:bg-yellow-500/10" },
+                    { label: "This Month", value: savedPosts.filter(p => p.createdAt && new Date(p.createdAt).getMonth() === new Date().getMonth()).length, icon: Calendar, color: "text-green-500", bg: "bg-green-50 dark:bg-green-500/10" },
+                    { label: "Total Uses", value: savedPosts.reduce((acc, p) => acc + (p.uses || 0), 0), icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10" },
+                    { label: "Favorites", value: savedPosts.filter(p => p.isFavorite).length, icon: Star, color: "text-yellow-500", bg: "bg-yellow-50 dark:bg-yellow-500/10" },
                   ].map((stat, i) => (
                     <Card key={i} className="border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50">
                       <CardContent className="p-4 flex items-center gap-4">
@@ -1411,18 +1466,25 @@ export default function Dashboard() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                        {savedPosts.length === 0 ? (
+                        {paginatedPosts.length === 0 ? (
                           <tr>
                             <td colSpan={5} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400 italic">
-                              No saved posts yet
+                              {searchQuery || filterStyle !== "all" ? "No posts match your filters" : "No saved posts yet"}
                             </td>
                           </tr>
                         ) : (
-                          savedPosts.map((post) => (
+                          paginatedPosts.map((post) => (
                             <tr key={post.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors group">
                               <td className="px-6 py-4 min-w-[300px]">
                                 <div className="flex items-start gap-3">
-                                  <Star className="w-4 h-4 mt-1 text-gray-300 dark:text-gray-600 group-hover:text-yellow-500 transition-colors cursor-pointer" />
+                                  <Star 
+                                    className={`w-4 h-4 mt-1 transition-colors cursor-pointer ${
+                                      post.isFavorite 
+                                        ? "text-yellow-500 fill-yellow-500" 
+                                        : "text-gray-300 dark:text-gray-600 group-hover:text-yellow-500"
+                                    }`}
+                                    onClick={() => toggleFavorite(post.id)}
+                                  />
                                   <div>
                                     <p className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1">{post.topic}</p>
                                     <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5 italic">"{post.content}"</p>
@@ -1442,7 +1504,7 @@ export default function Dashboard() {
                                 {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Just now'}
                               </td>
                               <td className="px-6 py-4 text-xs text-gray-500 dark:text-gray-400">
-                                {Math.floor(Math.random() * 10)}
+                                {post.uses || 0}
                               </td>
                               <td className="px-6 py-4 text-right">
                                 <div className="flex items-center justify-end gap-1">
@@ -1471,18 +1533,45 @@ export default function Dashboard() {
                   </div>
 
                   {/* Pagination */}
-                  <div className="px-6 py-4 border-t border-gray-50 dark:border-gray-800 flex items-center justify-center gap-2">
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400">
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 bg-orange-500 text-white font-bold text-xs">1</Button>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 font-bold text-xs hover:text-orange-500">2</Button>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 font-bold text-xs hover:text-orange-500">3</Button>
-                    <span className="text-gray-400 text-xs mx-1">...</span>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400">
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  {totalPages > 1 && (
+                    <div className="px-6 py-4 border-t border-gray-50 dark:border-gray-800 flex items-center justify-center gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 text-gray-400 disabled:opacity-50"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <Button
+                          key={page}
+                          variant="ghost"
+                          size="sm"
+                          className={`h-8 w-8 p-0 font-bold text-xs ${
+                            currentPage === page
+                              ? "bg-orange-500 text-white"
+                              : "text-gray-400 hover:text-orange-500"
+                          }`}
+                          onClick={() => setCurrentPage(page)}
+                        >
+                          {page}
+                        </Button>
+                      ))}
+
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 text-gray-400 disabled:opacity-50"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             )}
