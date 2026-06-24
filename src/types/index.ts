@@ -59,3 +59,10 @@ export interface CalendarEvent {
   category?: string;
   color: 'orange' | 'blue' | 'green' | 'purple';
 }
+
+export interface VoiceSample {
+  id: string;
+  content: string;
+  title: string;
+  createdAt: string;
+}

@@ -120,8 +120,8 @@ export default function Dashboard() {
   const [copied, setCopied] = useState(false);
 
   // Voice Settings State
-  const [voiceSamples, setVoiceSamples] = useState<string[]>([]);
-  const [newSample, setNewSample] = useState("");
+  const [voiceSamples, setVoiceSamples] = useState<VoiceSample[]>([]);
+  const [showAddSampleModal, setShowAddSampleModal] = useState(false);
 
   // Post History State
   const [savedPosts, setSavedPosts] = useState<SavedPost[]>([]);
@@ -226,11 +226,69 @@ export default function Dashboard() {
     const { data, error } = await supabase
       .from("voices")
       .select("*")
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
 
     if (data) {
-      setVoiceSamples(data.map((v: any) => v.content));
+      setVoiceSamples(data.map((v: any) => ({
+        id: v.id,
+        content: v.content,
+        title: v.title,
+        createdAt: v.created_at
+      })));
     }
+  };
+
+  const addVoiceSample = async (sample: Omit<VoiceSample, 'id' | 'createdAt'>) => {
+    const newSample: VoiceSample = {
+      ...sample,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString()
+    };
+
+    const updated = [newSample, ...voiceSamples];
+
+    if (isSupabaseConfigured && user?.id) {
+      const { error } = await supabase
+        .from("voices")
+        .insert([{
+          user_id: user.id,
+          content: newSample.content,
+          title: newSample.title
+        }]);
+
+      if (error) {
+        toast.error("Failed to add voice sample");
+        return;
+      }
+    } else {
+      localStorage.setItem("reachflow_voice", JSON.stringify(updated));
+    }
+
+    setVoiceSamples(updated);
+    toast.success("Voice sample added successfully!");
+  };
+
+  const deleteVoiceSample = async (id: string) => {
+    const updated = voiceSamples.filter((s) => s.id !== id);
+
+    if (isSupabaseConfigured && user?.id) {
+      const { error } = await supabase
+        .from("voices")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", user.id);
+
+      if (error) {
+        toast.error("Failed to delete voice sample");
+        return;
+      }
+    } else {
+      localStorage.setItem("reachflow_voice", JSON.stringify(updated));
+    }
+
+    setVoiceSamples(updated);
+    toast.success("Voice sample deleted!");
   };
 
   const loadCalendarEvents = async (userId: string) => {
@@ -1898,6 +1956,43 @@ export default function Dashboard() {
               </div>
             )}
 
+            {/* Add Voice Sample Modal */}
+            {showAddSampleModal && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowAddSampleModal(false)}>
+                <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Add Voice Sample</h3>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    addVoiceSample({
+                      title: formData.get('title') as string,
+                      content: formData.get('content') as string
+                    });
+                    setShowAddSampleModal(false);
+                    e.currentTarget.reset();
+                  }}>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sample Title</label>
+                        <input type="text" name="title" required placeholder="e.g., Post about AI tools"
+                               className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Writing Sample</label>
+                        <textarea name="content" rows={8} required placeholder="Paste your LinkedIn post here..."
+                                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+                      </div>
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <button type="button" className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300"
+                              onClick={() => setShowAddSampleModal(false)}>Cancel</button>
+                      <button type="submit" className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg font-bold">Add Sample</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
             {/* Voice Settings Section */}
             {section === "voice" && (
               <motion.div
@@ -1917,16 +2012,16 @@ export default function Dashboard() {
                       Train ReachFlow on your writing style to match your unique voice.
                     </p>
                   </div>
-                  <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg h-10 px-4 font-bold text-sm shadow-lg shadow-orange-500/20">
+                  <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg h-10 px-4 font-bold text-sm shadow-lg shadow-orange-500/20" onClick={() => setShowAddSampleModal(true)}>
                     <Sparkles className="w-4 h-4 mr-2" />
-                    Calibrate Voice
+                    Add Sample
                   </Button>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Left: Add samples */}
                   <div className="lg:col-span-2 space-y-6">
-                    <Card className="border-dashed border-2 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer group">
+                    <Card className="border-dashed border-2 border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/50 hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors cursor-pointer group" onClick={() => setShowAddSampleModal(true)}>
                       <CardContent className="p-12 flex flex-col items-center justify-center text-center space-y-4">
                         <div className="w-16 h-16 rounded-full bg-orange-50 dark:bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                           <Upload className="w-8 h-8 text-orange-500" />
@@ -1954,34 +2049,38 @@ export default function Dashboard() {
 
                     <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
                       <div className="p-4 border-b border-gray-50 dark:border-gray-800">
-                        <h3 className="text-sm font-bold text-gray-900 dark:text-white">Recent Samples</h3>
+                        <h3 className="text-sm font-bold text-gray-900 dark:text-white">Recent Samples ({voiceSamples.length})</h3>
                       </div>
                       <div className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                        {[
-                          { title: "Post about AI tools", date: "Added 2 days ago" },
-                          { title: "Founder lessons", date: "Added 5 days ago" },
-                          { title: "Building in public", date: "Added 1 week ago" },
-                        ].map((sample, i) => (
-                          <div key={i} className="p-4 flex items-center justify-between hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                <HistoryIcon className="w-4 h-4 text-gray-400" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-bold text-gray-900 dark:text-white">{sample.title}</p>
-                                <p className="text-[11px] text-gray-500 dark:text-gray-400">{sample.date}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
-                                <Check className="w-3 h-3 text-green-500" />
-                              </div>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400">
-                                <MoreVertical className="w-4 h-4" />
-                              </Button>
-                            </div>
+                        {voiceSamples.length === 0 ? (
+                          <div className="p-12 text-center text-gray-500 dark:text-gray-400 italic">
+                            No voice samples added yet
                           </div>
-                        ))}
+                        ) : (
+                          voiceSamples.map((sample) => (
+                            <div key={sample.id} className="p-4 flex items-center justify-between hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center flex-shrink-0">
+                                  <HistoryIcon className="w-4 h-4 text-gray-400" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{sample.title}</p>
+                                  <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                                    Added {new Date(sample.createdAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <div className="w-6 h-6 rounded-full bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
+                                  <Check className="w-3 h-3 text-green-500" />
+                                </div>
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-red-500" onClick={() => deleteVoiceSample(sample.id)}>
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
                   </div>
