@@ -130,6 +130,12 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const postsPerPage = 10;
 
+  // Calendar State
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [showAddEventModal, setShowAddEventModal] = useState(false);
+  const [selectedDateForEvent, setSelectedDateForEvent] = useState<string | null>(null);
+
   // Comment Generator State
   const [postToComment, setPostToComment] = useState("");
   const [commentGoal, setCommentGoal] = useState<
@@ -144,9 +150,11 @@ export default function Dashboard() {
       // Demo mode - use localStorage
       const savedPosts = localStorage.getItem("reachflow_posts");
       const savedVoices = localStorage.getItem("reachflow_voice");
+      const savedEvents = localStorage.getItem("reachflow_calendar_events");
       
       if (savedPosts) setSavedPosts(JSON.parse(savedPosts));
       if (savedVoices) setVoiceSamples(JSON.parse(savedVoices));
+      if (savedEvents) setCalendarEvents(JSON.parse(savedEvents));
       
       setStatus("demo");
       setUser({ email: "demo@reachflow.com" });
@@ -161,6 +169,7 @@ export default function Dashboard() {
         setStatus("authenticated");
         loadSavedPosts(session.user.id);
         loadVoiceSamples(session.user.id);
+        loadCalendarEvents(session.user.id);
       } else {
         setUser(null);
         setStatus("unauthenticated");
@@ -175,6 +184,7 @@ export default function Dashboard() {
         setStatus("authenticated");
         loadSavedPosts(session.user.id);
         loadVoiceSamples(session.user.id);
+        loadCalendarEvents(session.user.id);
       } else {
         setStatus("unauthenticated");
       }
@@ -220,6 +230,20 @@ export default function Dashboard() {
 
     if (data) {
       setVoiceSamples(data.map((v: any) => v.content));
+    }
+  };
+
+  const loadCalendarEvents = async (userId: string) => {
+    if (!isSupabaseConfigured) return;
+    
+    const { data, error } = await supabase
+      .from("calendar_events")
+      .select("*")
+      .eq("user_id", userId)
+      .order("date", { ascending: true });
+
+    if (data) {
+      setCalendarEvents(data);
     }
   };
 
@@ -587,6 +611,53 @@ export default function Dashboard() {
 
     setSavedPosts(updated);
     toast.success(updatedFavorite ? "Added to favorites" : "Removed from favorites");
+  };
+
+  const addCalendarEvent = async (event: Omit<CalendarEvent, 'id'>) => {
+    const newEvent: CalendarEvent = {
+      ...event,
+      id: Date.now().toString(),
+    };
+
+    const updated = [newEvent, ...calendarEvents];
+
+    if (isSupabaseConfigured && user?.id) {
+      const { error } = await supabase
+        .from("calendar_events")
+        .insert([{ ...newEvent, user_id: user.id }]);
+
+      if (error) {
+        toast.error("Failed to add event");
+        return;
+      }
+    } else {
+      localStorage.setItem("reachflow_calendar_events", JSON.stringify(updated));
+    }
+
+    setCalendarEvents(updated);
+    toast.success("Event added to calendar!");
+  };
+
+  const deleteCalendarEvent = async (id: string) => {
+    const updated = calendarEvents.filter((e) => e.id !== id);
+
+    if (isSupabaseConfigured && user?.id) {
+      const { error } = await supabase
+        .from("calendar_events")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", user.id);
+
+      if (error) {
+        toast.error("Failed to delete event");
+        return;
+      }
+    } else {
+      localStorage.setItem("reachflow_calendar_events", JSON.stringify(updated));
+    }
+
+    setCalendarEvents(updated);
+    toast.success("Event deleted from calendar!");
   };
 
   const filteredPosts = savedPosts.filter(post => {
@@ -1617,7 +1688,11 @@ export default function Dashboard() {
                       <Button variant="ghost" size="sm" className="h-8 px-3 text-xs text-gray-400">Week</Button>
                       <Button variant="ghost" size="sm" className="h-8 px-3 text-xs bg-orange-500 text-white font-bold rounded-md shadow-sm">Month</Button>
                     </div>
-                    <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg h-10 px-4 font-bold text-sm shadow-lg shadow-orange-500/20">
+                    <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg h-10 px-4 font-bold text-sm shadow-lg shadow-orange-500/20" 
+                            onClick={() => {
+                              setSelectedDateForEvent(currentDate.toISOString().split('T')[0]);
+                              setShowAddEventModal(true);
+                            }}>
                       <Plus className="w-4 h-4 mr-2" />
                       New Plan
                     </Button>
@@ -1627,15 +1702,22 @@ export default function Dashboard() {
                 <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
                   <div className="p-6 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-orange-500 border border-gray-100 dark:border-gray-800">
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-orange-500 border border-gray-100 dark:border-gray-800"
+                              onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))}>
                         <ArrowLeft className="w-4 h-4" />
                       </Button>
-                      <h2 className="text-lg font-bold text-gray-900 dark:text-white">June 2024</h2>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-orange-500 border border-gray-100 dark:border-gray-800">
+                      <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                        {new Date(currentDate.getFullYear(), currentDate.getMonth()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                      </h2>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-orange-500 border border-gray-100 dark:border-gray-800"
+                              onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))}>
                         <ArrowRight className="w-4 h-4" />
                       </Button>
                     </div>
-                    <Button variant="outline" size="sm" className="h-8 text-xs font-bold border-gray-200 dark:border-gray-800 text-gray-500">Today</Button>
+                    <Button variant="outline" size="sm" className="h-8 text-xs font-bold border-gray-200 dark:border-gray-800 text-gray-500"
+                            onClick={() => setCurrentDate(new Date())}>
+                      Today
+                    </Button>
                   </div>
 
                   <div className="grid grid-cols-7 border-b border-gray-50 dark:border-gray-800">
@@ -1645,50 +1727,88 @@ export default function Dashboard() {
                   </div>
 
                   <div className="grid grid-cols-7 auto-rows-[120px]">
-                    {Array.from({ length: 35 }).map((_, i) => {
-                      const day = i - 2; // Offset for June 2024 starting on Saturday
-                      const isCurrentMonth = day > 0 && day <= 30;
-                      return (
-                        <div key={i} className={`p-2 border-r border-b border-gray-50 dark:border-gray-800/50 relative ${!isCurrentMonth ? 'bg-gray-50/30 dark:bg-gray-900/30' : ''}`}>
-                          <span className={`text-xs font-bold ${day === 24 ? 'w-6 h-6 bg-orange-500 text-white flex items-center justify-center rounded-full' : 'text-gray-400'}`}>
-                            {day > 0 && day <= 30 ? day : day <= 0 ? 31 + day : day - 30}
-                          </span>
-                          
-                          {day === 10 && (
-                            <div className="mt-2 p-2 rounded-lg bg-orange-50 dark:bg-orange-500/10 border border-orange-100 dark:border-orange-500/20 space-y-1 group cursor-pointer transition-all hover:scale-[1.02]">
-                              <div className="flex items-center gap-1.5">
-                                <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                                <span className="text-[9px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-tight">Post Idea</span>
-                              </div>
-                              <p className="text-[10px] font-bold text-gray-900 dark:text-white leading-tight">AI in Startups</p>
-                              <p className="text-[9px] text-gray-500 dark:text-gray-400 italic">Hook: Power Stand</p>
-                            </div>
-                          )}
+                    {(() => {
+                      const year = currentDate.getFullYear();
+                      const month = currentDate.getMonth();
+                      const firstDay = new Date(year, month, 1).getDay();
+                      const daysInMonth = new Date(year, month + 1, 0).getDate();
+                      const today = new Date();
 
-                          {day === 11 && (
-                            <div className="mt-2 p-2 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-100 dark:border-green-500/20 space-y-1 group cursor-pointer transition-all hover:scale-[1.02]">
-                              <div className="flex items-center gap-1.5">
-                                <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                                <span className="text-[9px] font-bold text-green-600 dark:text-green-400 uppercase tracking-tight">Post Idea</span>
-                              </div>
-                              <p className="text-[10px] font-bold text-gray-900 dark:text-white leading-tight">Founder Mindset</p>
-                              <p className="text-[9px] text-gray-500 dark:text-gray-400 italic">Hook: Personal Story</p>
-                            </div>
-                          )}
+                      const gridDays = [];
+                      
+                      // Add previous month's days
+                      const prevMonthDays = new Date(year, month, 0).getDate();
+                      for (let i = firstDay - 1; i >= 0; i--) {
+                        gridDays.push({
+                          day: prevMonthDays - i,
+                          isCurrentMonth: false,
+                          date: new Date(year, month - 1, prevMonthDays - i)
+                        });
+                      }
+                      
+                      // Add current month's days
+                      for (let i = 1; i <= daysInMonth; i++) {
+                        gridDays.push({
+                          day: i,
+                          isCurrentMonth: true,
+                          date: new Date(year, month, i)
+                        });
+                      }
+                      
+                      // Add next month's days
+                      const remaining = 42 - gridDays.length;
+                      for (let i = 1; i <= remaining; i++) {
+                        gridDays.push({
+                          day: i,
+                          isCurrentMonth: false,
+                          date: new Date(year, month + 1, i)
+                        });
+                      }
 
-                          {day === 4 && (
-                            <div className="mt-2 p-2 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 space-y-1 group cursor-pointer transition-all hover:scale-[1.02]">
-                              <div className="flex items-center gap-1.5">
-                                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-tight">Post Idea</span>
+                      return gridDays.map((gridDay, i) => {
+                        const dateStr = gridDay.date.toISOString().split('T')[0];
+                        const isToday = today.toDateString() === gridDay.date.toDateString();
+                        const dayEvents = calendarEvents.filter(e => e.date === dateStr);
+
+                        const colorClasses: Record<string, { bg: string, border: string, text: string, dot: string }> = {
+                          orange: { bg: 'bg-orange-50 dark:bg-orange-500/10', border: 'border-orange-100 dark:border-orange-500/20', text: 'text-orange-600 dark:text-orange-400', dot: 'bg-orange-500' },
+                          blue: { bg: 'bg-blue-50 dark:bg-blue-500/10', border: 'border-blue-100 dark:border-blue-500/20', text: 'text-blue-600 dark:text-blue-400', dot: 'bg-blue-500' },
+                          green: { bg: 'bg-green-50 dark:bg-green-500/10', border: 'border-green-100 dark:border-green-500/20', text: 'text-green-600 dark:text-green-400', dot: 'bg-green-500' },
+                          purple: { bg: 'bg-purple-50 dark:bg-purple-500/10', border: 'border-purple-100 dark:border-purple-500/20', text: 'text-purple-600 dark:text-purple-400', dot: 'bg-purple-500' },
+                        };
+
+                        return (
+                          <div key={i} className={`p-2 border-r border-b border-gray-50 dark:border-gray-800/50 relative ${!gridDay.isCurrentMonth ? 'bg-gray-50/30 dark:bg-gray-900/30' : ''}`}
+                               onClick={() => {
+                                 setSelectedDateForEvent(dateStr);
+                                 setShowAddEventModal(true);
+                               }}>
+                            <span className={`text-xs font-bold ${isToday ? 'w-6 h-6 bg-orange-500 text-white flex items-center justify-center rounded-full' : 'text-gray-400'}`}>
+                              {gridDay.day}
+                            </span>
+                            
+                            {dayEvents.map((event) => (
+                              <div key={event.id} className={`mt-2 p-2 rounded-lg ${colorClasses[event.color]?.bg} border ${colorClasses[event.color]?.border} space-y-1 group cursor-pointer transition-all hover:scale-[1.02]`}
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     if (confirm('Delete this event?')) {
+                                       deleteCalendarEvent(event.id);
+                                     }
+                                   }}>
+                                <div className="flex items-center gap-1.5">
+                                  <div className={`w-1.5 h-1.5 rounded-full ${colorClasses[event.color]?.dot}`} />
+                                  <span className={`text-[9px] font-bold ${colorClasses[event.color]?.text} uppercase tracking-tight`}>
+                                    {event.type}
+                                  </span>
+                                </div>
+                                <p className="text-[10px] font-bold text-gray-900 dark:text-white leading-tight">{event.title}</p>
+                                {event.hook && <p className="text-[9px] text-gray-500 dark:text-gray-400 italic">Hook: {event.hook}</p>}
                               </div>
-                              <p className="text-[10px] font-bold text-gray-900 dark:text-white leading-tight">Sales Tips</p>
-                              <p className="text-[9px] text-gray-500 dark:text-gray-400 italic">Hook: Contrarian</p>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                            ))}
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
 
                   <div className="p-6 bg-gray-50/50 dark:bg-gray-900/50 flex items-center gap-6">
@@ -1711,6 +1831,71 @@ export default function Dashboard() {
                   </div>
                 </div>
               </motion.div>
+            )}
+
+            {/* Add Event Modal */}
+            {showAddEventModal && selectedDateForEvent && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowAddEventModal(false)}>
+                <div className="bg-white dark:bg-gray-900 rounded-2xl p-6 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Add Event</h3>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const event: Omit<CalendarEvent, 'id'> = {
+                      title: formData.get('title') as string,
+                      description: formData.get('description') as string,
+                      date: selectedDateForEvent,
+                      type: formData.get('type') as 'post' | 'idea' | 'task',
+                      hook: formData.get('hook') as string || undefined,
+                      color: formData.get('color') as 'orange' | 'blue' | 'green' | 'purple',
+                    };
+                    addCalendarEvent(event);
+                    setShowAddEventModal(false);
+                    e.currentTarget.reset();
+                  }}>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                        <input type="text" name="title" required
+                               className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                        <textarea name="description" rows={2}
+                                  className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hook (optional)</label>
+                        <input type="text" name="hook"
+                               className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                        <select name="type" className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                          <option value="post">Post</option>
+                          <option value="idea">Idea</option>
+                          <option value="task">Task</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
+                        <select name="color" defaultValue="orange"
+                                className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                          <option value="orange">Orange</option>
+                          <option value="blue">Blue</option>
+                          <option value="green">Green</option>
+                          <option value="purple">Purple</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex gap-3 mt-6">
+                      <button type="button" className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300"
+                              onClick={() => setShowAddEventModal(false)}>Cancel</button>
+                      <button type="submit" className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg font-bold">Add Event</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
             )}
 
             {/* Voice Settings Section */}

@@ -48,3 +48,14 @@ export interface SavedPost {
   isFavorite?: boolean;
   uses?: number;
 }
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  type: 'post' | 'idea' | 'task';
+  hook?: string;
+  category?: string;
+  color: 'orange' | 'blue' | 'green' | 'purple';
+}
