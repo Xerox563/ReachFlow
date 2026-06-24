@@ -69,6 +69,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ReferencePost, SavedPost, PostVariation } from "@/types";
 import { toast } from "sonner";
+import { useSession, signIn, signOut } from "next-auth/react";
+import { supabase } from "@/lib/supabase";
+import { LogOut, User as UserIcon } from "lucide-react";
 
 type DashboardSection =
   | "newPost"
@@ -79,6 +82,7 @@ type DashboardSection =
   | "comment";
 
 export default function Dashboard() {
+  const { data: session, status } = useSession();
   const [section, setSection] = useState<DashboardSection>("newPost");
 
   // New Post State
@@ -117,9 +121,11 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchStyles();
-    loadSavedPosts();
-    loadVoiceSamples();
-  }, []);
+    if (session?.user?.id) {
+      loadSavedPosts();
+      loadVoiceSamples();
+    }
+  }, [session]);
 
   const fetchStyles = async () => {
     const res = await fetch("/api/reference-posts");
@@ -127,34 +133,71 @@ export default function Dashboard() {
     setStyles(data);
   };
 
-  const loadSavedPosts = () => {
-    const saved = localStorage.getItem("reachflow_posts");
-    if (saved) {
-      setSavedPosts(JSON.parse(saved));
+  const loadSavedPosts = async () => {
+    if (!session?.user?.id) return;
+    const { data, error } = await supabase
+      .from("posts")
+      .select("*")
+      .eq("user_id", session.user.id)
+      .order("created_at", { ascending: false });
+
+    if (data) {
+      setSavedPosts(data.map((p: any) => ({
+        ...p,
+        createdAt: p.created_at
+      })));
     }
   };
 
-  const loadVoiceSamples = () => {
-    const saved = localStorage.getItem("reachflow_voice");
-    if (saved) {
-      setVoiceSamples(JSON.parse(saved));
+  const loadVoiceSamples = async () => {
+    if (!session?.user?.id) return;
+    const { data, error } = await supabase
+      .from("voices")
+      .select("*")
+      .eq("user_id", session.user.id);
+
+    if (data) {
+      setVoiceSamples(data.map((v: any) => v.content));
     }
   };
 
-  const saveVoiceSample = () => {
-    if (newSample.trim()) {
-      const updated = [...voiceSamples, newSample.trim()];
-      setVoiceSamples(updated);
-      localStorage.setItem("reachflow_voice", JSON.stringify(updated));
+  const saveVoiceSample = async () => {
+    if (newSample.trim() && session?.user?.id) {
+      const { error } = await supabase.from("voices").insert([
+        {
+          user_id: session.user.id,
+          content: newSample.trim(),
+        },
+      ]);
+
+      if (error) {
+        toast.error("Failed to save voice sample");
+        return;
+      }
+
+      setVoiceSamples([...voiceSamples, newSample.trim()]);
       setNewSample("");
       toast.success("Voice sample saved!");
     }
   };
 
-  const removeVoiceSample = (index: number) => {
+  const removeVoiceSample = async (index: number) => {
+    if (!session?.user?.id) return;
+    const sampleContent = voiceSamples[index];
+
+    const { error } = await supabase
+      .from("voices")
+      .delete()
+      .eq("user_id", session.user.id)
+      .eq("content", sampleContent);
+
+    if (error) {
+      toast.error("Failed to remove voice sample");
+      return;
+    }
+
     const updated = voiceSamples.filter((_, i) => i !== index);
     setVoiceSamples(updated);
-    localStorage.setItem("reachflow_voice", JSON.stringify(updated));
   };
 
   const addKeyPoint = () => setKeyPoints([...keyPoints, ""]);
@@ -317,10 +360,10 @@ export default function Dashboard() {
     }
   };
 
-  const savePost = () => {
-    if (!generatedContent) return;
-    const newPost: SavedPost = {
-      id: Date.now().toString(),
+  const savePost = async () => {
+    if (!generatedContent || !session?.user?.id) return;
+    const newPostData = {
+      user_id: session.user.id,
       topic,
       keyPoints,
       audience,
@@ -329,18 +372,39 @@ export default function Dashboard() {
       hookOptions,
       selectedHook,
       variations,
-      createdAt: new Date().toISOString(),
     };
-    const updated = [newPost, ...savedPosts];
-    setSavedPosts(updated);
-    localStorage.setItem("reachflow_posts", JSON.stringify(updated));
+
+    const { data, error } = await supabase
+      .from("posts")
+      .insert([newPostData])
+      .select()
+      .single();
+
+    if (error) {
+      toast.error("Failed to save post");
+      return;
+    }
+
+    setSavedPosts([{ ...data, createdAt: data.created_at }, ...savedPosts]);
     toast.success("Post saved!");
   };
 
-  const deletePost = (id: string) => {
+  const deletePost = async (id: string) => {
+    if (!session?.user?.id) return;
+
+    const { error } = await supabase
+      .from("posts")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", session.user.id);
+
+    if (error) {
+      toast.error("Failed to delete post");
+      return;
+    }
+
     const updated = savedPosts.filter((p) => p.id !== id);
     setSavedPosts(updated);
-    localStorage.setItem("reachflow_posts", JSON.stringify(updated));
     toast.success("Post deleted");
   };
 
@@ -413,6 +477,40 @@ export default function Dashboard() {
     { key: "comment", label: "AI Comments", icon: MessageSquare },
   ];
 
+  if (status === "loading") {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#FAF9F7] dark:bg-gray-950">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated") {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center bg-[#FAF9F7] dark:bg-gray-950 px-4 text-center">
+        <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-6">
+          <Sparkles className="w-8 h-8" />
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          Ready to generate content?
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-sm">
+          Please sign in to access your dashboard and start creating high-performing LinkedIn posts.
+        </p>
+        <Button
+          onClick={() => signIn()}
+          className="bg-orange-500 hover:bg-orange-600 text-white font-bold h-11 px-8 rounded-xl shadow-lg shadow-orange-500/20"
+        >
+          Sign in to ReachFlow
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-[#FAF9F7] dark:bg-gray-950">
       {/* Sidebar */}
@@ -462,12 +560,48 @@ export default function Dashboard() {
           <button className="w-9 h-9 rounded-full bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700 flex items-center justify-center hover:bg-gray-50 transition-colors">
             <Sun className="w-4 h-4 text-gray-600 dark:text-gray-300" />
           </button>
-          <button className="flex items-center gap-1.5 group">
-            <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-600 font-semibold flex items-center justify-center text-sm">
-              N
+          {status === "authenticated" ? (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5 group">
+                <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-600 font-semibold flex items-center justify-center text-sm overflow-hidden">
+                  {session.user?.image ? (
+                    <img
+                      src={session.user.image}
+                      alt={session.user.name || ""}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    session.user?.name?.[0] || "U"
+                  )}
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-gray-900 dark:text-white line-clamp-1">
+                    {session.user?.name}
+                  </span>
+                  <span className="text-[10px] text-gray-500 dark:text-gray-400 line-clamp-1">
+                    {session.user?.email}
+                  </span>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => signOut()}
+                className="text-gray-500 hover:text-red-500"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
             </div>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 transition-colors" />
-          </button>
+          ) : (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => signIn()}
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold"
+            >
+              Sign In
+            </Button>
+          )}
         </header>
 
         <main className="flex-1 overflow-auto px-8 py-8">
@@ -1061,7 +1195,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
                     { label: "Total Posts", value: savedPosts.length, icon: HistoryIcon, color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-500/10" },
-                    { label: "This Month", value: savedPosts.filter(p => new Date(p.createdAt).getMonth() === new Date().getMonth()).length, icon: Calendar, color: "text-green-500", bg: "bg-green-50 dark:bg-green-500/10" },
+                    {label: "This Month", value: savedPosts.filter(p => p.createdAt && new Date(p.createdAt).getMonth() === new Date().getMonth()).length, icon: Calendar, color: "text-green-500", bg: "bg-green-50 dark:bg-green-500/10" },
                     { label: "Total Uses", value: "23", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10" },
                     { label: "Favorites", value: "4", icon: Star, color: "text-yellow-500", bg: "bg-yellow-50 dark:bg-yellow-500/10" },
                   ].map((stat, i) => (
@@ -1120,7 +1254,7 @@ export default function Dashboard() {
                                 </span>
                               </td>
                               <td className="px-6 py-4 text-xs text-gray-500 dark:text-gray-400">
-                                {new Date(post.createdAt).toLocaleDateString() === new Date().toLocaleDateString() ? '2 hours ago' : 'Yesterday'}
+                                {post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Just now'}
                               </td>
                               <td className="px-6 py-4 text-xs text-gray-500 dark:text-gray-400">
                                 {Math.floor(Math.random() * 10)}
