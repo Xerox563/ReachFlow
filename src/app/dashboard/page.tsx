@@ -30,6 +30,7 @@ import {
   Filter,
   MoreVertical,
   Eye,
+  EyeOff,
   Star,
   Share2,
   Upload,
@@ -43,6 +44,10 @@ import {
   Sun,
   ChevronDown,
   Bookmark,
+  LogOut,
+  User as UserIcon,
+  Lock,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -69,9 +74,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ReferencePost, SavedPost, PostVariation } from "@/types";
 import { toast } from "sonner";
-import { useSession, signIn, signOut } from "next-auth/react";
 import { supabase } from "@/lib/supabase";
-import { LogOut, User as UserIcon } from "lucide-react";
 
 type DashboardSection =
   | "newPost"
@@ -82,7 +85,13 @@ type DashboardSection =
   | "comment";
 
 export default function Dashboard() {
-  const { data: session, status } = useSession();
+  const [user, setUser] = useState<any>(null);
+  const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
+  const [authView, setAuthView] = useState<"login" | "signup">("login");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [section, setSection] = useState<DashboardSection>("newPost");
 
   // New Post State
@@ -120,12 +129,38 @@ export default function Dashboard() {
   const steps = ["Topic", "Style", "Hook", "Generate", "Edit"];
 
   useEffect(() => {
-    fetchStyles();
-    if (session?.user?.id) {
-      loadSavedPosts();
-      loadVoiceSamples();
-    }
-  }, [session]);
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        setStatus("authenticated");
+        loadSavedPosts(session.user.id);
+        loadVoiceSamples(session.user.id);
+      } else {
+        setUser(null);
+        setStatus("unauthenticated");
+      }
+    });
+
+    // Check initial session
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        setStatus("authenticated");
+        loadSavedPosts(session.user.id);
+        loadVoiceSamples(session.user.id);
+      } else {
+        setStatus("unauthenticated");
+      }
+      fetchStyles();
+    };
+    init();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const fetchStyles = async () => {
     const res = await fetch("/api/reference-posts");
@@ -133,12 +168,11 @@ export default function Dashboard() {
     setStyles(data);
   };
 
-  const loadSavedPosts = async () => {
-    if (!session?.user?.id) return;
+  const loadSavedPosts = async (userId: string) => {
     const { data, error } = await supabase
       .from("posts")
       .select("*")
-      .eq("user_id", session.user.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
     if (data) {
@@ -149,23 +183,61 @@ export default function Dashboard() {
     }
   };
 
-  const loadVoiceSamples = async () => {
-    if (!session?.user?.id) return;
+  const loadVoiceSamples = async (userId: string) => {
     const { data, error } = await supabase
       .from("voices")
       .select("*")
-      .eq("user_id", session.user.id);
+      .eq("user_id", userId);
 
     if (data) {
       setVoiceSamples(data.map((v: any) => v.content));
     }
   };
 
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    try {
+      const { error } = await supabase.auth.signUp({
+        email: authEmail,
+        password: authPassword,
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Account created successfully! Check your email for verification.");
+      }
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: authEmail,
+        password: authPassword,
+      });
+      if (error) {
+        toast.error(error.message);
+      }
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success("Logged out!");
+  };
+
   const saveVoiceSample = async () => {
-    if (newSample.trim() && session?.user?.id) {
+    if (newSample.trim() && user?.id) {
       const { error } = await supabase.from("voices").insert([
         {
-          user_id: session.user.id,
+          user_id: user.id,
           content: newSample.trim(),
         },
       ]);
@@ -182,13 +254,13 @@ export default function Dashboard() {
   };
 
   const removeVoiceSample = async (index: number) => {
-    if (!session?.user?.id) return;
+    if (!user?.id) return;
     const sampleContent = voiceSamples[index];
 
     const { error } = await supabase
       .from("voices")
       .delete()
-      .eq("user_id", session.user.id)
+      .eq("user_id", user.id)
       .eq("content", sampleContent);
 
     if (error) {
@@ -361,9 +433,9 @@ export default function Dashboard() {
   };
 
   const savePost = async () => {
-    if (!generatedContent || !session?.user?.id) return;
+    if (!generatedContent || !user?.id) return;
     const newPostData = {
-      user_id: session.user.id,
+      user_id: user.id,
       topic,
       keyPoints,
       audience,
@@ -390,13 +462,13 @@ export default function Dashboard() {
   };
 
   const deletePost = async (id: string) => {
-    if (!session?.user?.id) return;
+    if (!user?.id) return;
 
     const { error } = await supabase
       .from("posts")
       .delete()
       .eq("id", id)
-      .eq("user_id", session.user.id);
+      .eq("user_id", user.id);
 
     if (error) {
       toast.error("Failed to delete post");
@@ -491,22 +563,78 @@ export default function Dashboard() {
 
   if (status === "unauthenticated") {
     return (
-      <div className="flex h-screen flex-col items-center justify-center bg-[#FAF9F7] dark:bg-gray-950 px-4 text-center">
+      <div className="flex h-screen flex-col items-center justify-center bg-[#FAF9F7] dark:bg-gray-950 px-4">
         <div className="w-16 h-16 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center mb-6">
           <Sparkles className="w-8 h-8" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-          Ready to generate content?
+          {authView === "login" ? "Welcome Back" : "Create an Account"}
         </h1>
-        <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-sm">
-          Please sign in to access your dashboard and start creating high-performing LinkedIn posts.
+        <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-sm text-center">
+          {authView === "login" 
+            ? "Sign in to your ReachFlow account to continue." 
+            : "Create your free account to start generating content."}
         </p>
-        <Button
-          onClick={() => signIn()}
-          className="bg-orange-500 hover:bg-orange-600 text-white font-bold h-11 px-8 rounded-xl shadow-lg shadow-orange-500/20"
-        >
-          Sign in to ReachFlow
-        </Button>
+        <Card className="w-full max-w-md p-8 shadow-xl dark:bg-gray-900 border-gray-200 dark:border-gray-700">
+          <form onSubmit={authView === "login" ? handleLogin : handleSignup} className="space-y-6">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-1">
+                <Mail className="w-4 h-4 text-gray-400" />
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+              </div>
+              <Input
+                type="email"
+                value={authEmail}
+                onChange={(e) => setAuthEmail(e.target.value)}
+                placeholder="you@example.com"
+                required
+                className="h-11"
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 mb-1">
+                <Lock className="w-4 h-4 text-gray-400" />
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+              </div>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                  className="h-11 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <Button
+              type="submit"
+              disabled={authLoading}
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold h-11 rounded-xl shadow-lg shadow-orange-500/20"
+            >
+              {authLoading ? "Loading..." : authView === "login" ? "Sign In" : "Sign Up"}
+            </Button>
+          </form>
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {authView === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
+              <button
+                onClick={() => setAuthView(authView === "login" ? "signup" : "login")}
+                className="text-orange-500 hover:text-orange-600 font-medium"
+              >
+                {authView === "login" ? "Sign Up" : "Sign In"}
+              </button>
+            </p>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -564,44 +692,27 @@ export default function Dashboard() {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5 group">
                 <div className="w-9 h-9 rounded-full bg-orange-100 text-orange-600 font-semibold flex items-center justify-center text-sm overflow-hidden">
-                  {session.user?.image ? (
-                    <img
-                      src={session.user.image}
-                      alt={session.user.name || ""}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    session.user?.name?.[0] || "U"
-                  )}
+                  {user.email?.[0]?.toUpperCase() || "U"}
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-gray-900 dark:text-white line-clamp-1">
-                    {session.user?.name}
+                    Welcome
                   </span>
                   <span className="text-[10px] text-gray-500 dark:text-gray-400 line-clamp-1">
-                    {session.user?.email}
+                    {user.email}
                   </span>
                 </div>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => signOut()}
+                onClick={handleLogout}
                 className="text-gray-500 hover:text-red-500"
               >
                 <LogOut className="w-4 h-4" />
               </Button>
             </div>
-          ) : (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => signIn()}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold"
-            >
-              Sign In
-            </Button>
-          )}
+          ) : null}
         </header>
 
         <main className="flex-1 overflow-auto px-8 py-8">
