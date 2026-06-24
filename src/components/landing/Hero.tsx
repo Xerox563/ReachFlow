@@ -1,10 +1,44 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useAnimate, useInView } from "framer-motion";
 import { CheckCircle2, Sparkles, Layout, Anchor, Edit3, History } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+
+const TypewriterText = ({ text, delay = 0 }: { text: string; delay?: number }) => {
+  const [displayText, setDisplayText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-100px" });
+
+  useEffect(() => {
+    if (!isInView) return;
+
+    let i = 0;
+    const timer = setTimeout(() => {
+      setIsTyping(true);
+      const interval = setInterval(() => {
+        if (i < text.length) {
+          setDisplayText(text.substring(0, i + 1));
+          i++;
+        } else {
+          clearInterval(interval);
+          setIsTyping(false);
+        }
+      }, 50);
+      return () => clearInterval(interval);
+    }, delay * 1000);
+    return () => clearTimeout(timer);
+  }, [text, isInView, delay]);
+
+  return (
+    <span ref={ref}>
+      {displayText}
+      {isTyping && <span className="animate-pulse text-orange-500">|</span>}
+    </span>
+  );
+};
 
 export const Hero = () => {
   const [step, setStep] = useState(0);
@@ -22,8 +56,9 @@ export const Hero = () => {
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <motion.div
             initial={{ x: -50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            whileInView={{ x: 0, opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 dark:bg-orange-950/30 border border-orange-100 dark:border-orange-900/50 text-orange-600 dark:text-orange-400 text-sm font-medium mb-6">
               <Sparkles className="w-4 h-4" />
@@ -31,15 +66,27 @@ export const Hero = () => {
             </div>
             
             <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6 text-gray-900 dark:text-white">
-              Create LinkedIn Posts That <span className="text-orange-500">Get Noticed.</span>
+              Create LinkedIn Posts That <span className="text-orange-500"><TypewriterText text="Get Noticed." delay={0.3} /></span>
             </h1>
             
-            <p className="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-lg">
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: 1 }}
+              className="text-lg text-gray-600 dark:text-gray-400 mb-8 max-w-lg"
+            >
               ReachFlow helps you generate high-performing LinkedIn content that matches your voice, saves time, and grows your personal brand.
-            </p>
+            </motion.p>
 
             <div className="flex flex-col sm:flex-row gap-8 mb-10">
-              <div className="flex items-start gap-3">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 1.2 }}
+                className="flex items-start gap-3"
+              >
                 <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center shrink-0">
                   <Sparkles className="w-5 h-5 text-orange-500 dark:text-orange-400" />
                 </div>
@@ -47,8 +94,14 @@ export const Hero = () => {
                   <h3 className="font-bold text-gray-900 dark:text-white">AI-Powered</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Smart content that sounds like you</p>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 1.4 }}
+                className="flex items-start gap-3"
+              >
                 <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center shrink-0">
                   <Layout className="w-5 h-5 text-orange-500 dark:text-orange-400" />
                 </div>
@@ -56,10 +109,16 @@ export const Hero = () => {
                   <h3 className="font-bold text-gray-900 dark:text-white">Proven Styles</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Built from winning LinkedIn posts</p>
                 </div>
-              </div>
+              </motion.div>
             </div>
 
-            <div className="flex flex-wrap gap-4 mb-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 1.6 }}
+              className="flex flex-wrap gap-4 mb-6"
+            >
               <Link href="/dashboard">
                 <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white rounded-full px-8 h-12">
                   Try It Free - Generate 1 Post
@@ -70,9 +129,15 @@ export const Hero = () => {
                   Request Access
                 </Button>
               </Link>
-            </div>
+            </motion.div>
 
-            <div className="flex flex-wrap gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: 1.8 }}
+              className="flex flex-wrap gap-6"
+            >
               <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                 <CheckCircle2 className="w-4 h-4 text-orange-500" />
                 <span>No signup required to try</span>
@@ -81,7 +146,7 @@ export const Hero = () => {
                 <CheckCircle2 className="w-4 h-4 text-orange-500" />
                 <span>Free 1 post generation</span>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
 
           <motion.div

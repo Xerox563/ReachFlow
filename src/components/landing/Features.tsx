@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
 import { 
   Library, 
   Sparkles, 
@@ -12,6 +13,43 @@ import {
   Calendar, 
   MessageSquare 
 } from "lucide-react";
+
+const TypewriterText = ({ text, delay = 0 }: { text: string; delay?: number }) => {
+  const [displayText, setDisplayText] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
+
+  useEffect(() => {
+    if (!isInView) return;
+
+    let i = 0;
+    const timer = setTimeout(() => {
+      setIsTyping(true);
+      const interval = setInterval(() => {
+        if (i < text.length) {
+          setDisplayText(text.substring(0, i + 1));
+          i++;
+        } else {
+          clearInterval(interval);
+          setIsTyping(false);
+        }
+      }, 30);
+      return () => clearInterval(interval);
+    }, delay * 1000);
+    return () => clearTimeout(timer);
+  }, [text, isInView, delay]);
+
+  return (
+    <span ref={ref}>
+      {displayText}
+      {isTyping && <span className="animate-pulse text-orange-500 text-xs">|</span>}
+    </span>
+  );
+};
+
+// Import useInView
+import { useInView } from "framer-motion";
 
 const features = [
   {
@@ -66,14 +104,14 @@ const container = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
+      staggerChildren: 0.15
     }
   }
 };
 
 const item = {
-  hidden: { y: 20, opacity: 0 },
-  show: { y: 0, opacity: 1 }
+  hidden: { y: 30, opacity: 0 },
+  show: { y: 0, opacity: 1, transition: { duration: 0.5 } }
 };
 
 export const Features = () => {
@@ -81,30 +119,41 @@ export const Features = () => {
     <section id="features" className="py-24 bg-white dark:bg-gray-950">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-            Everything You Need to Create Content <span className="text-orange-500">That Connects</span>
-          </h2>
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-4xl font-bold mb-4 text-gray-900 dark:text-white"
+          >
+            Everything You Need to Create Content <span className="text-orange-500"><TypewriterText text="That Connects" delay={0.3} /></span>
+          </motion.h2>
         </div>
 
         <motion.div 
           variants={container}
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-100px" }}
           className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
           {features.map((feature, index) => (
             <motion.div
               key={feature.title}
               variants={item}
-              whileHover={{ y: -5 }}
-              className="p-8 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md transition-all group"
+              whileHover={{ y: -5, scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 300 }}
+              className="p-8 rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md hover:border-orange-200 dark:hover:border-orange-800/50 transition-all group"
             >
-              <div className="w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-950/30 flex items-center justify-center mb-6 group-hover:bg-orange-500 transition-colors">
-                <feature.icon className="w-6 h-6 text-orange-500 group-hover:text-white transition-colors" />
+              <div className="w-12 h-12 rounded-xl bg-orange-50 dark:bg-orange-950/30 flex items-center justify-center mb-6 group-hover:bg-orange-500 transition-colors duration-300">
+                <feature.icon className="w-6 h-6 text-orange-500 group-hover:text-white transition-colors duration-300" />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">{feature.title}</h3>
-              <p className="text-gray-500 dark:text-gray-400 leading-relaxed">{feature.description}</p>
+              <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">
+                <TypewriterText text={feature.title} delay={0.1 + index * 0.05} />
+              </h3>
+              <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
+                <TypewriterText text={feature.description} delay={0.3 + index * 0.05} />
+              </p>
             </motion.div>
           ))}
         </motion.div>
