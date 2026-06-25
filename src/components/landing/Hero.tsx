@@ -174,10 +174,30 @@ export const Hero = () => {
 
                 <div className="flex gap-6">
                   <div className="w-40 hidden md:block space-y-3">
-                    <div className={`h-8 rounded-md border ${step === 0 ? 'bg-orange-100 dark:bg-orange-900/40 border-orange-200 dark:border-orange-800' : 'bg-gray-100 dark:bg-gray-800 border-transparent'}`} />
-                    <div className={`h-8 rounded-md border ${step === 1 ? 'bg-orange-100 dark:bg-orange-900/40 border-orange-200 dark:border-orange-800' : 'bg-gray-100 dark:bg-gray-800 border-transparent'}`} />
-                    <div className={`h-8 rounded-md border ${step === 2 ? 'bg-orange-100 dark:bg-orange-900/40 border-orange-200 dark:border-orange-800' : 'bg-gray-100 dark:bg-gray-800 border-transparent'}`} />
-                    <div className={`h-8 rounded-md border ${step === 3 ? 'bg-orange-100 dark:bg-orange-900/40 border-orange-200 dark:border-orange-800' : 'bg-gray-100 dark:bg-gray-800 border-transparent'}`} />
+                    <div className={`h-10 rounded-lg border flex items-center justify-center text-xs font-medium transition-all duration-300 ${step === 0 ? 'bg-orange-100 dark:bg-orange-900/40 border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400 shadow-sm' : 'bg-gray-100 dark:bg-gray-800 border-transparent text-gray-500 dark:text-gray-400'}`}>
+                      <div className="flex items-center gap-2">
+                        <Anchor className="w-3.5 h-3.5" />
+                        <span>Topic</span>
+                      </div>
+                    </div>
+                    <div className={`h-10 rounded-lg border flex items-center justify-center text-xs font-medium transition-all duration-300 ${step === 1 ? 'bg-orange-100 dark:bg-orange-900/40 border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400 shadow-sm' : 'bg-gray-100 dark:bg-gray-800 border-transparent text-gray-500 dark:text-gray-400'}`}>
+                      <div className="flex items-center gap-2">
+                        <Layout className="w-3.5 h-3.5" />
+                        <span>Style</span>
+                      </div>
+                    </div>
+                    <div className={`h-10 rounded-lg border flex items-center justify-center text-xs font-medium transition-all duration-300 ${step === 2 ? 'bg-orange-100 dark:bg-orange-900/40 border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400 shadow-sm' : 'bg-gray-100 dark:bg-gray-800 border-transparent text-gray-500 dark:text-gray-400'}`}>
+                      <div className="flex items-center gap-2">
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Hook</span>
+                      </div>
+                    </div>
+                    <div className={`h-10 rounded-lg border flex items-center justify-center text-xs font-medium transition-all duration-300 ${step === 3 ? 'bg-orange-100 dark:bg-orange-900/40 border-orange-200 dark:border-orange-800 text-orange-600 dark:text-orange-400 shadow-sm' : 'bg-gray-100 dark:bg-gray-800 border-transparent text-gray-500 dark:text-gray-400'}`}>
+                      <div className="flex items-center gap-2">
+                        <History className="w-3.5 h-3.5" />
+                        <span>Generate</span>
+                      </div>
+                    </div>
                   </div>
                   
                   <div className="flex-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
@@ -201,12 +221,18 @@ export const Hero = () => {
                             </div>
                           </div>
                           <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-400 dark:text-gray-500">What do you want to write about?</label>
-                            <div className="h-10 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700" />
+                            <label className="text-xs font-bold text-gray-600 dark:text-gray-300">What do you want to write about?</label>
+                            <div className="h-10 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 flex items-center px-3">
+                              <span className="text-xs text-gray-400">e.g., Building software products</span>
+                            </div>
                           </div>
                           <div className="space-y-2">
-                            <label className="text-xs font-bold text-gray-400 dark:text-gray-500">Key Points (optional)</label>
-                            <div className="h-20 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700" />
+                            <label className="text-xs font-bold text-gray-600 dark:text-gray-300">Key Points (optional)</label>
+                            <div className="h-20 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 flex items-start p-3">
+                              <span className="text-xs text-gray-400">• User research first
+• Build fast, validate faster
+• Iterate based on feedback</span>
+                            </div>
                           </div>
                           <Button className="w-full bg-orange-500 hover:bg-orange-600 h-10 rounded-lg">
                             Continue
@@ -232,12 +258,24 @@ export const Hero = () => {
                             </div>
                           </div>
                           <div className="grid grid-cols-2 gap-3">
-                            <div className="h-20 bg-orange-50 dark:bg-orange-950/30 rounded-md border border-orange-100 dark:border-orange-900/50" />
-                            <div className="h-20 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700" />
+                            <div className="h-20 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-100 dark:border-orange-900/50 p-3 flex flex-col justify-center">
+                              <span className="text-xs font-bold text-orange-600 dark:text-orange-400">Storytelling</span>
+                              <span className="text-[10px] text-gray-500">Personal narrative</span>
+                            </div>
+                            <div className="h-20 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 flex flex-col justify-center">
+                              <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Data-Driven</span>
+                              <span className="text-[10px] text-gray-500">Stats & insights</span>
+                            </div>
                           </div>
                           <div className="grid grid-cols-2 gap-3">
-                            <div className="h-20 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700" />
-                            <div className="h-20 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700" />
+                            <div className="h-20 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 flex flex-col justify-center">
+                              <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Contrarian</span>
+                              <span className="text-[10px] text-gray-500">Challenge norms</span>
+                            </div>
+                            <div className="h-20 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 flex flex-col justify-center">
+                              <span className="text-xs font-bold text-gray-700 dark:text-gray-300">Quick Tips</span>
+                              <span className="text-[10px] text-gray-500">Actionable advice</span>
+                            </div>
                           </div>
                         </motion.div>
                       )}
@@ -259,9 +297,15 @@ export const Hero = () => {
                               <span>5. Edit</span>
                             </div>
                           </div>
-                          <div className="h-14 bg-orange-50 dark:bg-orange-950/30 rounded-md border border-orange-100 dark:border-orange-900/50" />
-                          <div className="h-14 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700" />
-                          <div className="h-14 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700" />
+                          <div className="h-14 bg-orange-50 dark:bg-orange-950/30 rounded-lg border border-orange-100 dark:border-orange-900/50 p-3 flex items-center">
+                            <span className="text-xs text-gray-700 dark:text-gray-300">"I lost a $50k client last month..."</span>
+                          </div>
+                          <div className="h-14 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 flex items-center">
+                            <span className="text-xs text-gray-700 dark:text-gray-300">"Most founders get this wrong..."</span>
+                          </div>
+                          <div className="h-14 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 flex items-center">
+                            <span className="text-xs text-gray-700 dark:text-gray-300">"Here's what changed everything..."</span>
+                          </div>
                         </motion.div>
                       )}
                       {step === 3 && (
@@ -282,7 +326,11 @@ export const Hero = () => {
                               <span>5. Edit</span>
                             </div>
                           </div>
-                          <div className="h-32 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700" />
+                          <div className="h-32 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                            <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
+                              I lost a $50,000 client last month. Best thing that happened to my agency all year. Here's why... They wanted us to "just post more." No strategy. No targeting. Just volume. We said no.
+                            </p>
+                          </div>
                           <div className="flex gap-2">
                             <Button className="flex-1 bg-orange-500 hover:bg-orange-600 h-10 rounded-lg">
                               Copy
