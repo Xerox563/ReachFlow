@@ -37,54 +37,25 @@ export async function generateLinkedInPost({
   voiceSamples?: string[];
 }) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.AI_MODEL_NAME || 'google/gemini-2.0-flash-exp:free';
+  const model = process.env.AI_MODEL_NAME ;
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo LinkedIn post");
-    return `I used to think building software was all about lines of code. 
-
-Until I spent 3 years leading a team that shipped 0 meaningful features. 
-
-Here's what I learned the hard way: 
-
-The best code is the code you don't write. 
-
-Last month we had a big feature request from 5 clients. 
-
-First instinct: Hire 2 more devs, start coding immediately. 
-
-Instead: We spent 2 days talking to those 5 clients. 
-
-Turned out 4/5 of them just needed a small tweak to an existing feature. 
-
-The 5th? Their problem was solved by a 3rd-party tool we already integrate with. 
-
-We delivered everything in 1 week. 0 new devs. 0 new features. 
-
-And our NPS went up 21 points. 
-
-The best engineers I know don't code first. 
-
-They ask first. 
-
-They understand first. 
-
-Then they solve the right problem. 
-
-This applies to everything:
-
-- Product
-- Marketing
-- Sales
-- Your career
-
-Stop doing work. 
-
-Start solving problems. 
-
-What's a problem you've been "working on" that you should actually understand first? 
-
-👇 Let me know in the comments!`;
+    return `I lost a $50,000 client last month. 
+Best thing that happened to my agency all year. 
+Here's why: 
+They wanted us to "just post more." No strategy. No targeting. Just volume. 
+We said no. 
+3 days later, they signed with someone who promised exactly that. 
+Last week I checked their LinkedIn page. 
+47 posts. 12 likes total. Zero leads mentioned. 
+Meanwhile, we picked up 2 new clients that same month — both from referrals off a single post that took me 20 minutes to write. 
+Here's what I'd tell anyone starting out on LinkedIn: 
+→ Volume without a point of view is just noise 
+→ One honest post beats ten generic ones 
+→ Saying no to the wrong client protects the work you actually want to be known for 
+We didn't lose a client. We avoided years of work we'd have hated. 
+Have you ever turned down a deal that turned out to be the right call?`;
   }
 
   const voiceContext = voiceSamples ? `
@@ -93,9 +64,50 @@ What's a problem you've been "working on" that you should actually understand fi
   ` : '';
 
   const prompt = `
-    You are an expert LinkedIn content creator. Your goal is to write a high-performing LinkedIn post.
+    You are an expert LinkedIn content creator trained in RevenueZen's proven methodology for high-performing posts.
     
-    REFERENCE STYLE TO MATCH:
+    WHY THESE POSTS WORK (per RevenueZen's data):
+    - No links, videos, or images in posts — authenticity beats recycled content
+    - 2-3% engagement (engagements/views) is considered a good rate
+    - Build a small group of engaged connections and reciprocate their engagement
+
+    10 PROVEN POST TYPES/ANGLES TO CHOOSE FROM:
+    1. BE PERSONAL: I-centric posts work against typical sales advice. People follow individuals, not generic content
+    2. BE RELEVANT/TIMELY: Write about what's affecting your specific network right now, not generic news
+    3. SELF-DEPRECATING INSTEAD OF SELF-PROMOTIONAL: Use your accomplishment as the hook, then subvert it with a counterintuitive point
+    4. SHORT + A POINTED QUESTION: Only use once you have an engaged audience (don't overuse)
+    5. BE CONTROVERSIAL (WITH NUANCE): Challenge commonly accepted wisdom with nuance
+    6. TELL A STORY: Same advice delivered as something that happened to you becomes far more engaging
+    7. EDUCATE WITH A HARD TRUTH: Walk the line between challenging misconception and negativity
+    8. TEASE SOMETHING COMING: Hint at a launch without "feature spitting," add humility
+    9. CONCRETE NUMBERS + AN OFFER: Real strategies + "DM me" only when specific
+    10. SHOW RESULTS, DON'T STATE THEM: Share specifics of how you got the result
+
+    COMPLETE CHECKLIST:
+    - Length: 150-300 words (1,300-2,000 characters) for most
+    - HOOK: Only line that matters — contrarian, vulnerable, numbers-based, or curiosity-driven
+    - Format: Short lines, lots of white space, bullets/arrows for lists, 3-5 hashtags ONLY AT END, NO LINKS IN BODY
+    - Voice: First-person, specific, NOT "thought leader" generic
+    - CTA: Real, answerable question — NOT "thoughts?"
+
+    FULL EXAMPLE POST:
+    I lost a $50,000 client last month.
+    Best thing that happened to my agency all year.
+    Here's why:
+    They wanted us to "just post more." No strategy. No targeting. Just volume.
+    We said no.
+    3 days later, they signed with someone who promised exactly that.
+    Last week I checked their LinkedIn page.
+    47 posts. 12 likes total. Zero leads mentioned.
+    Meanwhile, we picked up 2 new clients that same month — both from referrals off a single post that took me 20 minutes to write.
+    Here's what I'd tell anyone starting out on LinkedIn:
+    → Volume without a point of view is just noise
+    → One honest post beats ten generic ones
+    → Saying no to the wrong client protects the work you actually want to be known for
+    We didn't lose a client. We avoided years of work we'd have hated.
+    Have you ever turned down a deal that turned out to be the right call?
+
+    NOW, CREATE A POST USING THIS STYLE:
     ${style.content}
     
     CATEGORY: ${style.category}
@@ -110,12 +122,14 @@ What's a problem you've been "working on" that you should actually understand fi
     TARGET AUDIENCE: ${audience}
     
     INSTRUCTIONS:
-    1. Match the tone, pacing, and formatting of the reference style.
-    2. Use the specified hook type to grab attention.
-    3. Follow the structure of the reference post.
-    4. If voice samples are provided, match that writing style closely.
-    5. Ensure the content is relevant to the topic and audience.
-    6. Keep it concise and impactful.
+    1. Choose ONE of the 10 post types above that fits the topic
+    2. Follow ALL the checklist rules strictly
+    3. Match the tone, pacing, and formatting of the reference style
+    4. If voice samples provided, match that writing style closely
+    5. Keep it 150-300 words
+    6. NO LINKS IN POST, add "First comment for the link" if needed
+    7. 3-5 hashtags ONLY AT THE END
+    8. END WITH A REAL, ANSWERABLE QUESTION
     
     OUTPUT: Only the LinkedIn post content.
   `;
@@ -154,7 +168,7 @@ export async function generateHooks({
   count?: number;
 }) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.AI_MODEL_NAME || 'google/gemini-2.0-flash-exp:free';
+  const model = process.env.AI_MODEL_NAME ;
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo hooks");
@@ -214,7 +228,7 @@ export async function generateVariations({
   content: string;
 }) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.AI_MODEL_NAME || 'google/gemini-2.0-flash-exp:free';
+  const model = process.env.AI_MODEL_NAME;
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo variations");
@@ -290,7 +304,7 @@ export async function editPost({
   action: 'rewrite' | 'shorten' | 'expand' | 'professional' | 'viral';
 }) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.AI_MODEL_NAME || 'google/gemini-2.0-flash-exp:free';
+  const model = process.env.AI_MODEL_NAME ;
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo edit");
@@ -372,7 +386,7 @@ export async function generateComment({
   goal?: 'network' | 'engage' | 'insightful';
 }) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.AI_MODEL_NAME || 'google/gemini-2.0-flash-exp:free';
+  const model = process.env.AI_MODEL_NAME ;
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo comments");
