@@ -32,7 +32,7 @@ async function generateLinkedInPostWithKey({
   voiceSamples,
   apiKey
 }: any) {
-  const model = process.env.AI_MODEL_NAME || 'anthropic/claude-3-sonnet';
+  const model = process.env.AI_MODEL_NAME || 'openrouter/auto';
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo LinkedIn post");
@@ -142,7 +142,7 @@ What's a problem you've been "working on" that you should actually understand fi
 }
 
 async function generateHooksWithKey({ topic, count = 10, apiKey }: any) {
-  const model = process.env.AI_MODEL_NAME || 'anthropic/claude-3-sonnet';
+  const model = process.env.AI_MODEL_NAME || 'openrouter/auto';
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo hooks");
@@ -197,7 +197,7 @@ async function generateHooksWithKey({ topic, count = 10, apiKey }: any) {
 }
 
 async function generateVariationsWithKey({ content, apiKey }: any) {
-  const model = process.env.AI_MODEL_NAME || 'anthropic/claude-3-sonnet';
+  const model = process.env.AI_MODEL_NAME || 'openrouter/auto';
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo variations");
@@ -266,7 +266,7 @@ async function generateVariationsWithKey({ content, apiKey }: any) {
 }
 
 async function editPostWithKey({ content, action, apiKey }: any) {
-  const model = process.env.AI_MODEL_NAME || 'anthropic/claude-3-sonnet';
+  const model = process.env.AI_MODEL_NAME || 'openrouter/auto';
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo edit");
@@ -341,7 +341,7 @@ async function editPostWithKey({ content, action, apiKey }: any) {
 }
 
 async function generateCommentWithKey({ postContent, goal = 'engage', apiKey }: any) {
-  const model = process.env.AI_MODEL_NAME || 'anthropic/claude-3-sonnet';
+  const model = process.env.AI_MODEL_NAME || 'openrouter/auto';
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo comments");

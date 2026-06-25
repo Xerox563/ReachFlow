@@ -37,7 +37,7 @@ export async function generateLinkedInPost({
   voiceSamples?: string[];
 }) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.AI_MODEL_NAME || 'anthropic/claude-3-sonnet';
+  const model = process.env.AI_MODEL_NAME || 'openrouter/auto';
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo LinkedIn post");
@@ -154,7 +154,7 @@ export async function generateHooks({
   count?: number;
 }) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.AI_MODEL_NAME || 'anthropic/claude-3-sonnet';
+  const model = process.env.AI_MODEL_NAME || 'openrouter/auto';
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo hooks");
@@ -214,7 +214,7 @@ export async function generateVariations({
   content: string;
 }) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.AI_MODEL_NAME || 'anthropic/claude-3-sonnet';
+  const model = process.env.AI_MODEL_NAME || 'openrouter/auto';
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo variations");
@@ -290,7 +290,7 @@ export async function editPost({
   action: 'rewrite' | 'shorten' | 'expand' | 'professional' | 'viral';
 }) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.AI_MODEL_NAME || 'anthropic/claude-3-sonnet';
+  const model = process.env.AI_MODEL_NAME || 'openrouter/auto';
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo edit");
@@ -372,7 +372,7 @@ export async function generateComment({
   goal?: 'network' | 'engage' | 'insightful';
 }) {
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.AI_MODEL_NAME || 'anthropic/claude-3-sonnet';
+  const model = process.env.AI_MODEL_NAME || 'openrouter/auto';
 
   if (!apiKey) {
     console.warn("OPENROUTER_API_KEY not set - returning demo comments");
